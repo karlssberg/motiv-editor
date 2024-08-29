@@ -34,6 +34,7 @@ export interface State {
   ): boolean;
   documentClickHandler(event: Event): void;
   suggestionVisible: boolean;
+  getSearchCriteria(): string;
 }
 
 export interface StateContext {

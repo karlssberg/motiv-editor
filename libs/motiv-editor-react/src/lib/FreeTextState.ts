@@ -21,6 +21,10 @@ export default class FreeTextState implements State {
     private readonly context: StateContext
   ) {}
 
+  getSearchCriteria(): string {
+    return '';
+  }
+
   arrowLeftHandler(event: KeyboardEvent): boolean {
     return false;
   }

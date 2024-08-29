@@ -4,18 +4,12 @@
   $isRangeSelection,
   $isTextNode,
   LexicalEditor,
-  LexicalNode,
   TextNode,
 } from 'lexical';
-import {
-  PointType,
-  RangeSelection,
-  TextPointType,
-} from 'lexical/LexicalSelection';
+import { RangeSelection, TextPointType } from 'lexical/LexicalSelection';
 import { Suggestion } from './Suggestion';
 import FreeTextState from './FreeTextState';
 import { State, StateContext } from './useMotivStates';
-import { $isUnrecognizedNode } from './nodes/UnrecognizedNode';
 
 export default class SuggestionsState implements State {
   readonly type = 'SuggestionsState';
@@ -112,7 +106,15 @@ export default class SuggestionsState implements State {
   getSearchCriteria(): string {
     const startNode = this.startPoint.getNode();
     const selection = $getSelection();
-    return selection?.getTextContent() ?? '';
+    if (!$isRangeSelection(selection)) return '';
+    if (selection.focus.type !== 'text') return '';
+
+    const text = startNode.getTextContent();
+    const slicedText = text.slice(
+      this.startPoint.offset,
+      selection.focus.offset
+    );
+    return slicedText;
   }
 
   private setFreeTextState() {
@@ -174,10 +176,14 @@ export default class SuggestionsState implements State {
 
     const nodeText = endNode.getTextContent();
     const overlappingText = findSuffixPrefixOverlap(nodeText, suggestion.value);
+
+    const textOffset =
+      overlappingText.length || this.getSearchCriteria().length;
+
     if (end.key === this.startPoint.key) {
       selection.setTextNodeRange(
         endNode,
-        end.offset - overlappingText.length,
+        end.offset - textOffset,
         endNode,
         end.offset
       );
