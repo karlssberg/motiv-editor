@@ -39,7 +39,24 @@ function tryMergeUnrecognizedNode(unrecognizedNode: UnrecognizedNode) {
     const currentText = unrecognizedNode.getTextContent();
     const mergedText = previousText + currentText;
     unrecognizedNode.setTextContent(mergedText);
-    unrecognizedNode.select(previousText.length, previousText.length);
+    const selection = $getSelection();
+
+    if (!$isRangeSelection(selection)) {
+      previousNode.remove();
+      return true;
+    }
+
+    const isSelected = (node: LexicalNode) =>
+      selection.anchor.getNode() === node || selection.focus.getNode() === node;
+
+    if (isSelected(unrecognizedNode)) {
+      unrecognizedNode.select(
+        previousText.length + selection.anchor.offset,
+        previousText.length + selection.focus.offset
+      );
+    } else if (isSelected(previousNode)) {
+      unrecognizedNode.select(selection.anchor.offset, selection.focus.offset);
+    }
     previousNode.remove();
 
     return true;

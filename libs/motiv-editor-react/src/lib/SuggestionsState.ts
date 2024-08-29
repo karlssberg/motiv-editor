@@ -5,11 +5,15 @@
   $isTextNode,
   LexicalEditor,
   TextNode,
+  $createPoint,
+  RangeSelection,
+  $getRoot,
 } from 'lexical';
-import { RangeSelection, TextPointType } from 'lexical/LexicalSelection';
 import { Suggestion } from './Suggestion';
 import FreeTextState from './FreeTextState';
 import { State, StateContext } from './useMotivStates';
+import { $createUnrecognizedNode } from './nodes/UnrecognizedNode';
+import { TextPointType } from 'lexical/LexicalSelection';
 
 export default class SuggestionsState implements State {
   readonly type = 'SuggestionsState';
@@ -18,20 +22,20 @@ export default class SuggestionsState implements State {
     private readonly editor: LexicalEditor,
     private readonly setNextState: (state: State) => void,
     private readonly context: StateContext,
-    private readonly startPoint: TextPointType
+    private startPoint: TextPointType
   ) {
     this.editor = editor;
   }
 
   arrowLeftHandler(event: KeyboardEvent): boolean {
-    this.ensureStartNodeExists();
+    this.ensureStartNodeIsValid();
     this.context.selectedIndex.value = 0;
 
     this.setFreeTextState();
     return false;
   }
   arrowRightHandler(event: KeyboardEvent): boolean {
-    this.ensureStartNodeExists();
+    this.ensureStartNodeIsValid();
     this.context.selectedIndex.value = 0;
 
     this.setFreeTextState();
@@ -39,7 +43,7 @@ export default class SuggestionsState implements State {
   }
 
   arrowDownHandler(event: KeyboardEvent): boolean {
-    this.ensureStartNodeExists();
+    this.ensureStartNodeIsValid();
     this.context.selectedIndex.value =
       (this.context.selectedIndex.value + 1) %
       this.context.suggestions.value.length;
@@ -49,7 +53,7 @@ export default class SuggestionsState implements State {
   }
 
   arrowUpHandler(event: KeyboardEvent): boolean {
-    this.ensureStartNodeExists();
+    this.ensureStartNodeIsValid();
     this.context.selectedIndex.value =
       (this.context.selectedIndex.value -
         1 +
@@ -61,7 +65,6 @@ export default class SuggestionsState implements State {
   }
 
   keyDownHandler(event: KeyboardEvent): boolean {
-    this.ensureStartNodeExists();
     const isSpecialChar = event.altKey || event.ctrlKey || event.metaKey;
     if (isSpecialChar) return false;
 
@@ -87,9 +90,8 @@ export default class SuggestionsState implements State {
 
     const initialEnd = points[1];
     const initialEndNode = initialEnd.getNode();
-    const suggestionStartNode = this.startPoint.getNode();
 
-    if (!$isTextNode(suggestionStartNode) || !$isTextNode(initialEndNode)) {
+    if (!$isTextNode(initialEndNode)) {
       console.error('Expected start and end of selections to be text nodes');
       return false;
     }
@@ -104,7 +106,8 @@ export default class SuggestionsState implements State {
     return false;
   }
   getSearchCriteria(): string {
-    const startNode = this.startPoint.getNode();
+    const startNode = $getNodeByKey(this.startPoint.key);
+    if (!startNode) return '';
     const selection = $getSelection();
     if (!$isRangeSelection(selection)) return '';
     if (selection.focus.type !== 'text') return '';
@@ -149,6 +152,13 @@ export default class SuggestionsState implements State {
     );
   }
 
+  private createStartPoint() {
+    const node = $createUnrecognizedNode('');
+    $getSelection()?.insertNodes([node]);
+    const point = $createPoint(node.getKey(), 0, 'text') as TextPointType;
+    return point;
+  }
+
   private handleSuggestionSelection(suggestion: Suggestion): boolean {
     const selection = $getSelection();
     if (!$isRangeSelection(selection)) {
@@ -169,6 +179,7 @@ export default class SuggestionsState implements State {
   }
 
   private insertText(selection: RangeSelection, suggestion: Suggestion) {
+    this.ensureStartNodeIsValid();
     const startNode = this.startPoint.getNode();
     const [, end] = selection.getStartEndPoints() ?? [null, this.startPoint];
     const endNode =
@@ -194,12 +205,9 @@ export default class SuggestionsState implements State {
   }
 
   backspaceHandler(event: KeyboardEvent): boolean {
-    this.ensureStartNodeExists();
-
     return false;
   }
   deleteHandler(event: KeyboardEvent): boolean {
-    this.ensureStartNodeExists();
     return false;
   }
 
@@ -210,17 +218,26 @@ export default class SuggestionsState implements State {
 
   suggestionVisible = true;
 
-  private ensureStartNodeExists(): void {
-    setTimeout(
-      () =>
-        this.editor.update(() => {
-          if ($getNodeByKey(this.startPoint.key) !== null) {
-            return;
-          }
-          this.setFreeTextState();
-        }),
-      0
-    );
+  private ensureStartNodeIsValid(): void {
+    if ($getNodeByKey(this.startPoint.key) === null) {
+      const selection = $getSelection();
+      if (!$isRangeSelection(selection)) {
+        return;
+      }
+
+      const points = selection.getStartEndPoints();
+      if (!points) {
+        return;
+      }
+      const [start] = points;
+      if (start.key === this.startPoint.key && start.type === 'text') {
+        this.startPoint = start;
+        return;
+      }
+
+      const newStartPoint = this.createStartPoint();
+      this.startPoint = newStartPoint;
+    }
   }
 }
 

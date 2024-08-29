@@ -12,8 +12,6 @@ import {
   COMMAND_PRIORITY_NORMAL,
   SELECTION_CHANGE_COMMAND,
 } from 'lexical';
-import { debounce } from 'next/dist/server/utils';
-import { getSyntax, HighlightToken } from './syntaxAnalyzer';
 import SuggestionsState from './SuggestionsState';
 
 export interface State {
@@ -97,6 +95,7 @@ export function useMotivStates(atomSuggestions: Signal<Suggestion[]>) {
       console.log('Editor text is empty');
       return;
     }
+
     editor.getEditorState().read(() => {
       const globalOffset = getSourceCodeCaretPosition();
       if (globalOffset === null) {
@@ -108,6 +107,7 @@ export function useMotivStates(atomSuggestions: Signal<Suggestion[]>) {
         state.value instanceof SuggestionsState
           ? state.value.getSearchCriteria()
           : '';
+
       suggestions.value = autoSuggester.value.getSuggestions(
         editorText,
         globalOffset,

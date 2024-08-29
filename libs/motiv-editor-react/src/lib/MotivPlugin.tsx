@@ -33,8 +33,13 @@ import classnames from 'classnames';
 import type { Suggestion } from './Suggestion';
 import { useMotivStates } from './useMotivStates';
 import { Signal } from '@preact/signals-react';
-import { computePosition } from '@floating-ui/react';
+import {
+  computePosition,
+  ComputePositionReturn,
+  ReferenceElement,
+} from '@floating-ui/react';
 import { escapeRegExp } from './escapeRegExp';
+import { $createWhitespaceNode } from './nodes/WhitespaceNode';
 
 function AtomDecorator() {
   return (
@@ -159,7 +164,10 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
           strategy: 'absolute',
           placement: 'bottom-start',
         })
-          .then((pos) => setDropdownPosition({ left: pos.x, top: pos.y }))
+          .then((pos) => {
+            if (pos.x && pos.y)
+              setDropdownPosition({ left: pos.x, top: pos.y });
+          })
           .catch(() => setDropdownPosition(undefined));
       }, 0);
     }
@@ -188,15 +196,12 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
   );
 
   const renderedSuggestions = useMemo(() => {
-    const searchCriteria = editor.read(() => {
-      return state.value.getSearchCriteria();
-    });
+    const searchCriteria = editor.read(() => state.value.getSearchCriteria());
     const escapedSearchCriteria = escapeRegExp(searchCriteria);
     const searchRegExp = new RegExp(`(${escapedSearchCriteria})`, 'gi');
 
     return suggestions.value.map((suggestion, index) => {
       const textParts = suggestion.value.split(searchRegExp);
-
       return (
         <li
           className={classnames(
@@ -209,12 +214,13 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
           onKeyDown={(event) => event.preventDefault()}
           onClick={(event) => onClick(event, suggestion, index)}
         >
-          {textParts.map((part) => (
+          {textParts.map((part, index) => (
             <span
               className={classnames({
                 'font-bold':
                   part.toLowerCase() === searchCriteria.toLowerCase(),
               })}
+              key={`${index}-${textParts}`}
             >
               {part}
             </span>
@@ -235,7 +241,9 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
           left: `${dropdownPosition?.left ?? 0}px`,
         }}
       >
-        {state.value.suggestionVisible && <ul>{...renderedSuggestions}</ul>}
+        {state.value.suggestionVisible && dropdownPosition?.top && (
+          <ul>{...renderedSuggestions}</ul>
+        )}
       </div>,
       document.body
     )

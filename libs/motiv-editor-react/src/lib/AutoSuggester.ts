@@ -101,7 +101,7 @@ export default class AutoSuggester {
 
     return suggestions.reduce<Suggestion[]>(
       (list: Suggestion[], suggestion: Suggestion) => {
-        if (suggestion.label.includes(searchCriteria)) {
+        if (suggestion.value.includes(searchCriteria)) {
           list.unshift(suggestion);
         } else {
           list.push(suggestion);
