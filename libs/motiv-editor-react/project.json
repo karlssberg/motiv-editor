@@ -1,0 +1,9 @@
+{
+  "name": "motiv-editor-react",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "motiv-editor-react/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project motiv-editor-react --web",
+  "targets": {}
+}

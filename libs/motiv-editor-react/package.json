@@ -1,0 +1,17 @@
+{
+  "name": "motiv-editor-react",
+  "version": "0.0.1",
+  "dependencies": {
+    "@lexical/react": "*",
+    "@radix-ui/react-select": "*",
+    "@radix-ui/react-slot": "*",
+    "class-variance-authority": "*",
+    "classes": "*",
+    "classnames": "*",
+    "clsx": "*",
+    "lexical": "*",
+    "lucide-react": "*",
+    "tailwind-merge": "*",
+    "tailwindcss-animate": "*"
+  }
+}

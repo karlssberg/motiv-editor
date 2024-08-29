@@ -1,0 +1,49 @@
+{
+  "name": "react-motiv-playground",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "react-motiv-playground",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/react-motiv-playground"
+      },
+      "configurations": {
+        "development": {
+          "sourceMap": true,
+          "outputPath": "apps/react-motiv-playground"
+        },
+        "production": {
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "react-motiv-playground:build",
+        "dev": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "react-motiv-playground:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "react-motiv-playground:build:production",
+          "dev": false
+        }
+      }
+    },
+    "export": {
+      "executor": "@nx/next:export",
+      "options": {
+        "buildTarget": "react-motiv-playground:build:production"
+      }
+    }
+  }
+}
