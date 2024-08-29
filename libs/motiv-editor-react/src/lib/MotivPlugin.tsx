@@ -228,7 +228,7 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
         </li>
       );
     });
-  }, [onClick, selectedIndex.value, suggestions.value]);
+  }, [onClick, selectedIndex.value, suggestions.value, state.value]);
 
   return (
     isBrowser &&
