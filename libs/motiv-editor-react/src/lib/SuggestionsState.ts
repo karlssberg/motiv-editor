@@ -175,6 +175,7 @@ export default class SuggestionsState implements State {
 
     this.insertText(selection, suggestion);
 
+    this.setFreeTextState();
     return true;
   }
 
@@ -201,7 +202,6 @@ export default class SuggestionsState implements State {
     }
 
     selection.insertText(suggestion.value);
-    this.context.selectedIndex.value = 0;
   }
 
   backspaceHandler(event: KeyboardEvent): boolean {
