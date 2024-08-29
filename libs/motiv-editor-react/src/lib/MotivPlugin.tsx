@@ -1,4 +1,5 @@
 ﻿import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import type { MouseEvent } from 'react';
 import {
   RefObject,
   useCallback,
@@ -7,15 +8,11 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { mergeRegister } from '@lexical/utils';
 import {
-  $getRoot,
   $getSelection,
-  $isElementNode,
   $isRangeSelection,
-  $isTextNode,
   COMMAND_PRIORITY_NORMAL,
   KEY_ARROW_DOWN_COMMAND,
   KEY_ARROW_LEFT_COMMAND,
@@ -26,20 +23,13 @@ import {
   KEY_DOWN_COMMAND,
   KEY_ENTER_COMMAND,
   KEY_ESCAPE_COMMAND,
-  LexicalNode,
-  PointType,
 } from 'lexical';
 import classnames from 'classnames';
 import type { Suggestion } from './Suggestion';
 import { useMotivStates } from './useMotivStates';
 import { Signal } from '@preact/signals-react';
-import {
-  computePosition,
-  ComputePositionReturn,
-  ReferenceElement,
-} from '@floating-ui/react';
+import { computePosition } from '@floating-ui/react';
 import { escapeRegExp } from './escapeRegExp';
-import { $createWhitespaceNode } from './nodes/WhitespaceNode';
 
 function AtomDecorator() {
   return (
@@ -78,6 +68,7 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
   const dropdownRef = useRef(null);
   const [isBrowser, setIsBrowser] = useState(false);
   const { state, selectedIndex, suggestions } = useMotivStates(specs);
+  const [searchText, setSearchText] = useState('');
 
   useEffect(
     () =>
@@ -87,6 +78,14 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
         }
       }),
     [editor, state]
+  );
+
+  useEffect(
+    () =>
+      editor.registerTextContentListener(() => {
+        setSearchText(editor.read(() => state.value.getSearchCriteria()));
+      }),
+    [editor]
   );
 
   useEffect(
@@ -196,8 +195,7 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
   );
 
   const renderedSuggestions = useMemo(() => {
-    const searchCriteria = editor.read(() => state.value.getSearchCriteria());
-    const escapedSearchCriteria = escapeRegExp(searchCriteria);
+    const escapedSearchCriteria = escapeRegExp(searchText);
     const searchRegExp = new RegExp(`(${escapedSearchCriteria})`, 'gi');
 
     return suggestions.value.map((suggestion, index) => {
@@ -217,8 +215,7 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
           {textParts.map((part, index) => (
             <span
               className={classnames({
-                'font-bold':
-                  part.toLowerCase() === searchCriteria.toLowerCase(),
+                'font-bold': part.toLowerCase() === searchText.toLowerCase(),
               })}
               key={`${index}-${textParts}`}
             >
@@ -228,7 +225,7 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
         </li>
       );
     });
-  }, [onClick, selectedIndex.value, suggestions.value, state.value]);
+  }, [onClick, selectedIndex.value, suggestions.value]);
 
   return (
     isBrowser &&

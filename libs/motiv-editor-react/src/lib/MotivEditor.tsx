@@ -67,12 +67,6 @@ export function MotivEditor() {
     []
   );
 
-  const onChange = useCallback((editorState: EditorState) => {
-    console.log(JSON.stringify(editorState, null, 2));
-  }, []);
-
-  const onSelection = useCallback((item: string) => {}, []);
-
   return (
     <LexicalComposer initialConfig={initialConfig}>
       <div className="relative" ref={containerRef} spellCheck="false">
