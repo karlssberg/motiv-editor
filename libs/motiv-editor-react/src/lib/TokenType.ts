@@ -1,5 +1,5 @@
 ﻿type OperatorTypes = 'and' | 'andalso' | 'or' | 'orelse' | 'not' | 'xor';
-type VariableTypes = 'atom';
+type VariableTypes = 'proposition';
 type PunctuationTypes = 'openParenthesis' | 'closeParenthesis';
 type IgnoredTypes = 'whitespace' | 'newline';
 

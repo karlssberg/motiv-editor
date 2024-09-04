@@ -9,7 +9,7 @@ import { XorExpressionContext } from "./PropositionalLogicParser.js";
 import { OrExpressionContext } from "./PropositionalLogicParser.js";
 import { AndExpressionContext } from "./PropositionalLogicParser.js";
 import { NotExpressionContext } from "./PropositionalLogicParser.js";
-import { AtomContext } from "./PropositionalLogicParser.js";
+import { PropositionContext } from "./PropositionalLogicParser.js";
 
 
 /**
@@ -57,10 +57,10 @@ export class PropositionalLogicVisitor<Result> extends AbstractParseTreeVisitor<
      */
     visitNotExpression?: (ctx: NotExpressionContext) => Result;
     /**
-     * Visit a parse tree produced by `PropositionalLogicParser.atom`.
+     * Visit a parse tree produced by `PropositionalLogicParser.proposition`.
      * @param ctx the parse tree
      * @return the visitor result
      */
-    visitAtom?: (ctx: AtomContext) => Result;
+    visitProposition?: (ctx: PropositionContext) => Result;
 }
 

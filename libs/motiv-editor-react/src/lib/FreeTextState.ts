@@ -21,7 +21,7 @@ export default class FreeTextState implements State {
     private readonly context: StateContext
   ) {}
 
-  getSearchCriteria(): string {
+  getSearchText(): string {
     return '';
   }
 
@@ -67,25 +67,25 @@ export default class FreeTextState implements State {
             return;
           }
 
-          const [start, end] = points;
-          if ($isTokenNode(start.getNode()) || $isTokenNode(end.getNode()))
-            return;
-
           const isWhitespace = key.match(/\s/);
-          const adjustedStart = $createPoint(
-            start.key,
-            Math.max(0, start.offset - 1) + (isWhitespace ? 1 : 0),
-            'text'
-          ) as TextPointType;
+          const [start] = points;
+          const adjustedStart =
+            start.type === 'text'
+              ? ($createPoint(
+                  start.key,
+                  Math.max(0, start.offset - 1) + (isWhitespace ? 1 : 0),
+                  'text'
+                ) as TextPointType)
+              : start;
 
-          this.setNextState(
-            new SuggestionsState(
-              this.editor,
-              this.setNextState,
-              this.context,
-              adjustedStart
-            )
+          const suggestionsState = new SuggestionsState(
+            this.editor,
+            this.setNextState,
+            this.context,
+            adjustedStart
           );
+          this.setNextState(suggestionsState);
+          suggestionsState.keyDownHandler(event);
         }),
       0
     );

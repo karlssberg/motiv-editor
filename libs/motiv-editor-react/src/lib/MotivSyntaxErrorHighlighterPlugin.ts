@@ -8,6 +8,7 @@ import { Signal, useComputed } from '@preact/signals-react';
 import { createMotivParser } from './motivParser';
 import { Token } from 'antlr4ng';
 import { $isWhitespaceNode } from './nodes/WhitespaceNode';
+import { Proposition } from 'motiv-editor-react';
 
 interface NodeMetadata {
   node: TextNode;
@@ -16,7 +17,7 @@ interface NodeMetadata {
 }
 
 interface MotivSyntaxErrorHighlighterPluginProps {
-  atoms: Signal<string[]>;
+  propositions: Proposition[];
 }
 
 interface ExtendedErrorInfo {
@@ -30,10 +31,10 @@ interface ExtendedErrorInfo {
 }
 
 export function MotivSyntaxErrorHighlighterPlugin({
-  atoms,
+  propositions,
 }: MotivSyntaxErrorHighlighterPluginProps) {
   const [editor] = useLexicalComposerContext();
-  const parser = useComputed(() => createMotivParser(atoms.value));
+  const parser = useMemo(() => createMotivParser(propositions), [propositions]);
   useEffect(
     () =>
       editor.registerTextContentListener(() => {
@@ -63,7 +64,7 @@ export function MotivSyntaxErrorHighlighterPlugin({
             return tree;
           }, new RedBlackTree<NodeMetadata, number>((node) => node.start));
 
-          const { success, errors } = parser.value(text);
+          const { success, errors } = parser(text);
           if (success) return;
 
           const errorInfos = errors.map<ExtendedErrorInfo>((error) => {

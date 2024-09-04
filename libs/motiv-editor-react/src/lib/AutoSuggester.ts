@@ -9,6 +9,7 @@ import {
 } from 'antlr4ng';
 import { PropositionalLogicLexer } from './antlr/PropositionalLogicLexer';
 import { CandidatesCollection, CodeCompletionCore } from 'antlr4-c3';
+import { Proposition } from 'motiv-editor-react';
 
 const xOrSuggestions: Suggestion[] = [
   {
@@ -72,9 +73,16 @@ const parenthesisSuggestions: Suggestion[] = [
 
 export default class AutoSuggester {
   private readonly defaultSuggestions: Suggestion[];
-  constructor(private readonly atomSuggestions: Suggestion[]) {
+  constructor(private readonly propositions: Proposition[]) {
+    const propositionSuggestions: Suggestion[] = propositions
+      .filter((proposition) => !!proposition.template)
+      .map((proposition) => ({
+        label: proposition.template!,
+        value: proposition.template!,
+        type: 'proposition',
+      }));
     this.defaultSuggestions = [
-      ...atomSuggestions,
+      ...propositionSuggestions,
       ...andSuggestions,
       ...orSuggestions,
       ...xOrSuggestions,
@@ -132,7 +140,7 @@ export default class AutoSuggester {
     const index = computeTokenIndex(formulaContext, position);
     const core = new CodeCompletionCore(parser);
     core.ignoredTokens = new Set([PropositionalLogicParser.WS]);
-    core.preferredRules = new Set([PropositionalLogicParser.RULE_atom]);
+    core.preferredRules = new Set([PropositionalLogicParser.RULE_proposition]);
 
     const candidates = core.collectCandidates(
       index ?? lexer.emitEOF().tokenIndex
@@ -150,8 +158,12 @@ export default class AutoSuggester {
   ): Iterable<Suggestion> {
     for (const tuple of candidates.rules) {
       const [index] = tuple;
-      if (index === PropositionalLogicParser.RULE_atom) {
-        yield* this.atomSuggestions;
+      if (index === PropositionalLogicParser.RULE_proposition) {
+        yield* this.propositions.map((p) => ({
+          label: p.template!,
+          value: p.template!,
+          type: 'proposition',
+        }));
       } else {
         yield* andSuggestions;
         yield* orSuggestions;

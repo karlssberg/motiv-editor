@@ -9,7 +9,7 @@ import { XorExpressionContext } from "./PropositionalLogicParser.js";
 import { OrExpressionContext } from "./PropositionalLogicParser.js";
 import { AndExpressionContext } from "./PropositionalLogicParser.js";
 import { NotExpressionContext } from "./PropositionalLogicParser.js";
-import { AtomContext } from "./PropositionalLogicParser.js";
+import { PropositionContext } from "./PropositionalLogicParser.js";
 
 
 /**
@@ -78,15 +78,15 @@ export class PropositionalLogicListener implements ParseTreeListener {
      */
     exitNotExpression?: (ctx: NotExpressionContext) => void;
     /**
-     * Enter a parse tree produced by `PropositionalLogicParser.atom`.
+     * Enter a parse tree produced by `PropositionalLogicParser.proposition`.
      * @param ctx the parse tree
      */
-    enterAtom?: (ctx: AtomContext) => void;
+    enterProposition?: (ctx: PropositionContext) => void;
     /**
-     * Exit a parse tree produced by `PropositionalLogicParser.atom`.
+     * Exit a parse tree produced by `PropositionalLogicParser.proposition`.
      * @param ctx the parse tree
      */
-    exitAtom?: (ctx: AtomContext) => void;
+    exitProposition?: (ctx: PropositionContext) => void;
 
     visitTerminal(node: TerminalNode): void {}
     visitErrorNode(node: ErrorNode): void {}

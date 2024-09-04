@@ -28,47 +28,41 @@ import classnames from 'classnames';
 import type { Suggestion } from './Suggestion';
 import { useMotivStates } from './useMotivStates';
 import { Signal } from '@preact/signals-react';
-import { computePosition } from '@floating-ui/react';
+import {
+  computePosition,
+  ComputePositionConfig,
+  ComputePositionReturn,
+} from '@floating-ui/react';
 import { escapeRegExp } from './escapeRegExp';
+import { SpecResource } from '../../../../apps/react-motiv-playground/src/app/MotivClient';
 
-function AtomDecorator() {
-  return (
-    <span
-      style={{
-        color: 'darkblue',
-      }}
-    />
-  );
-}
-function OperatorDecorator() {
-  return (
-    <span
-      style={{
-        color: 'darkcyan',
-      }}
-    />
-  );
+interface MotivPluginProps {
+  propositions: ISpecResource[];
+  containerRef: RefObject<HTMLElement>;
+  defaultPositionRef: RefObject<HTMLElement>;
 }
 
-interface DropdownPluginProps {
-  specs: Signal<Suggestion[]>;
-  containerRef: RefObject<HTMLDivElement>;
-}
+const computePositionOptions: Partial<ComputePositionConfig> = {
+  strategy: 'absolute',
+  placement: 'bottom-start',
+};
 
 interface Coords {
   top: number;
   left: number;
 }
 
-export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
+export function MotivPlugin({
+  propositions,
+  defaultPositionRef,
+}: MotivPluginProps) {
   const [editor] = useLexicalComposerContext();
   const [dropdownPosition, setDropdownPosition] = useState<
     Coords | undefined
   >();
   const dropdownRef = useRef(null);
   const [isBrowser, setIsBrowser] = useState(false);
-  const { state, selectedIndex, suggestions } = useMotivStates(specs);
-  const [searchText, setSearchText] = useState('');
+  const { state, selectedIndex, suggestions } = useMotivStates(propositions);
 
   useEffect(
     () =>
@@ -78,14 +72,6 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
         }
       }),
     [editor, state]
-  );
-
-  useEffect(
-    () =>
-      editor.registerTextContentListener(() => {
-        setSearchText(editor.read(() => state.value.getSearchCriteria()));
-      }),
-    [editor]
   );
 
   useEffect(
@@ -151,7 +137,7 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
   const updateDropdownPosition = useCallback(() => {
     const selection = $getSelection();
     if ($isRangeSelection(selection) && selection.isCollapsed()) {
-      setTimeout(() => {
+      setTimeout(async () => {
         const domSelection = getSelection();
         const domRange =
           domSelection?.rangeCount !== 0 && domSelection?.getRangeAt(0);
@@ -159,15 +145,29 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
         if (!domRange || !dropdownRef.current)
           return setDropdownPosition(undefined);
 
-        computePosition(domRange, dropdownRef.current, {
-          strategy: 'absolute',
-          placement: 'bottom-start',
-        })
-          .then((pos) => {
-            if (pos.x && pos.y)
-              setDropdownPosition({ left: pos.x, top: pos.y });
-          })
-          .catch(() => setDropdownPosition(undefined));
+        try {
+          let pos = await computePosition(
+            domRange,
+            dropdownRef.current,
+            computePositionOptions
+          );
+          if (!isValidPosition(pos) && defaultPositionRef.current) {
+            pos = await computePosition(
+              defaultPositionRef.current,
+              dropdownRef.current,
+              computePositionOptions
+            );
+          }
+          setDropdownPosition({ left: pos.x, top: pos.y });
+        } catch (e) {
+          setDropdownPosition(undefined);
+        }
+
+        function isValidPosition(pos: ComputePositionReturn): boolean {
+          if (!pos) return false;
+
+          return !!pos.x || !!pos.y;
+        }
       }, 0);
     }
   }, [state.value.suggestionVisible]);
@@ -195,6 +195,7 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
   );
 
   const renderedSuggestions = useMemo(() => {
+    const searchText = state.value.getSearchText();
     const escapedSearchCriteria = escapeRegExp(searchText);
     const searchRegExp = new RegExp(`(${escapedSearchCriteria})`, 'gi');
 
@@ -212,16 +213,20 @@ export function MotivPlugin({ specs, containerRef }: DropdownPluginProps) {
           onKeyDown={(event) => event.preventDefault()}
           onClick={(event) => onClick(event, suggestion, index)}
         >
-          {textParts.map((part, index) => (
-            <span
-              className={classnames({
-                'font-bold': part.toLowerCase() === searchText.toLowerCase(),
-              })}
-              key={`${index}-${textParts}`}
-            >
-              {part}
-            </span>
-          ))}
+          {textParts.map((part, index) => {
+            const upperCasePart = part.toUpperCase();
+            const upperCaseSearchText = searchText.toUpperCase();
+            return (
+              <span
+                className={classnames({
+                  'font-bold': upperCasePart === upperCaseSearchText,
+                })}
+                key={`${index}-${textParts}`}
+              >
+                {part}
+              </span>
+            );
+          })}
         </li>
       );
     });

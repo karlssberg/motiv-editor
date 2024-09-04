@@ -17,7 +17,7 @@ const operatorColor = 'chocolate';
 const defaultColor = 'black';
 
 const colorLookup = {
-  atom: variableColor,
+  proposition: variableColor,
   and: operatorColor,
   andalso: operatorColor,
   or: operatorColor,

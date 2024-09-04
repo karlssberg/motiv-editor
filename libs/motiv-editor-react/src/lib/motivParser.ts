@@ -1,6 +1,6 @@
 ﻿import { PropositionalLogicListener } from './antlr/PropositionalLogicListener';
 import {
-  AtomContext,
+  PropositionContext,
   PropositionalLogicParser,
 } from './antlr/PropositionalLogicParser';
 import {
@@ -13,6 +13,7 @@ import {
   Token,
 } from 'antlr4ng';
 import { PropositionalLogicLexer } from './antlr/PropositionalLogicLexer';
+import { Proposition } from 'motiv-editor-react';
 
 export interface ErrorInfo {
   line: number;
@@ -22,21 +23,22 @@ export interface ErrorInfo {
 }
 
 class MotivSemanticErrorListener extends PropositionalLogicListener {
-  private readonly atoms: Set<string>;
+  private readonly propositions: Set<string>;
   private readonly errors: ErrorInfo[] = [];
 
-  constructor(atoms: string[]) {
+  constructor(propositions: string[]) {
     super();
-    this.atoms = new Set(atoms);
+    this.propositions = new Set(propositions);
   }
-  exitAtom = (ctx: AtomContext): void => {
-    const atom = ctx.getText();
-    if (!this.atoms.has(atom)) {
+  exitProposition = (ctx: PropositionContext): void => {
+    const proposition = ctx.getText();
+    const normalizedProposition = normalizeProposition(proposition);
+    if (!this.propositions.has(normalizedProposition)) {
       this.errors.push({
         line: ctx.start!.line,
         column: ctx.start!.column,
         token: ctx.start,
-        message: `The name '${atom}' is not a recognized proposition`,
+        message: `The name '${proposition}' is not a recognized proposition`,
       });
     }
   };
@@ -76,9 +78,17 @@ interface MotivParserResult {
   errors: ErrorInfo[];
 }
 
+function normalizeProposition(proposition: string): string {
+  return proposition.replace(/\{[^}]\}/g, '').toUpperCase();
+}
+
 export function createMotivParser(
-  propositions: string[]
+  propositions: Proposition[]
 ): (input: string) => MotivParserResult {
+  const normalizedPropositions = propositions.map((propositions) =>
+    normalizeProposition(propositions.template)
+  );
+
   return (input: string) => {
     const charStream = CharStream.fromString(input);
     const lexer = new PropositionalLogicLexer(charStream);
@@ -86,7 +96,9 @@ export function createMotivParser(
     const parser = new PropositionalLogicParser(tokenStream);
 
     const syntaxErrorListener = new MotivSyntaxErrorListener();
-    const semanticErrorListener = new MotivSemanticErrorListener(propositions);
+    const semanticErrorListener = new MotivSemanticErrorListener(
+      normalizedPropositions
+    );
     parser.addErrorListener(syntaxErrorListener);
     parser.addParseListener(semanticErrorListener);
     parser.formula();

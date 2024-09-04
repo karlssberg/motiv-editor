@@ -1,17 +1,13 @@
-﻿import React, { useCallback, useEffect } from 'react';
+﻿import { useEffect, useMemo } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
-  $createTextNode,
   $getSelection,
   $isRangeSelection,
-  $setSelection,
   LexicalNode,
-  RangeSelection,
   TextNode,
 } from 'lexical';
 import { $createTokenNode, $isTokenNode, TokenNode } from './nodes/TokenNode';
-import { computed, Signal, useComputed } from '@preact/signals-react';
-import type { Suggestion } from './Suggestion';
+import { useComputed } from '@preact/signals-react';
 import { operatorLiteralToTokenType, TokenType } from './TokenType';
 import {
   $createWhitespaceNode,
@@ -24,12 +20,19 @@ import {
   $isUnrecognizedNode,
   UnrecognizedNode,
 } from './nodes/UnrecognizedNode';
+import { Proposition } from 'motiv-editor-react';
+
+function isNotEmpty(text: string) {
+  return !!text;
+}
+
+const parameterPattern = /\{[^}]+\}/g;
 
 function isWhitespace(text: string) {
   return !text.match(/\S/);
 }
 interface MotivSyntaxHighlightPluginProps {
-  specs: Signal<Suggestion[]>;
+  propositions: Proposition[];
 }
 
 function tryMergeUnrecognizedNode(unrecognizedNode: UnrecognizedNode) {
@@ -114,32 +117,42 @@ function escapeRegExp(txt: string) {
 }
 
 export function MotivSyntaxHighlightPlugin({
-  specs,
+  propositions,
 }: MotivSyntaxHighlightPluginProps) {
   const [editor] = useLexicalComposerContext();
 
-  const propositions = useComputed(
-    () => new Set(specs.value.map((spec) => spec.value))
+  const propositionMap = useMemo(
+    () => new Map(propositions.map((spec) => [spec.id, spec])),
+    [propositions]
   );
+
   const operators = useComputed(
     () => new Map(Object.entries(operatorLiteralToTokenType))
   );
 
   const pattern = useComputed(() => {
-    const atomsPattern = specs.value
-      .map((suggestion) => suggestion.value)
+    const propositionsPattern = propositions
+      .map((suggestion) => suggestion.template)
       .map(escapeRegExp)
       .join('|');
     const operatorsPattern = [...operators.value.keys()]
       .map(escapeRegExp)
       .join('|');
-    const parenthesesPattern = ['\\(', '\\)'].join('|');
-    const regExpPattern = `(${atomsPattern}|${operatorsPattern}|${parenthesesPattern})`;
+    const whitespacePattern = '\\s+';
+    const parenthesesPattern = ['(', ')'].map(escapeRegExp).join('|');
+    const patterns = [
+      propositionsPattern,
+      whitespacePattern,
+      operatorsPattern,
+      parenthesesPattern,
+    ].filter((pattern) => !!pattern);
+    const regExpPattern = `(${patterns.join('|')})`;
     return new RegExp(regExpPattern, 'g');
   });
 
   const getTokenType = useComputed(() => (text: string): TokenType | null => {
-    if (propositions.value.has(text)) return 'atom';
+    if (propositionMap.has(text.replace(parameterPattern, '')))
+      return 'proposition';
     if (operators.value.has(text)) return operators.value.get(text)!;
     if (text === '(') return 'openParenthesis';
     if (text === ')') return 'closeParenthesis';
@@ -150,7 +163,10 @@ export function MotivSyntaxHighlightPlugin({
     const text = node.getTextContent();
 
     const validationCheck = [
-      { type: 'atom', check: (text: string) => propositions.value.has(text) },
+      {
+        type: 'proposition',
+        check: (text: string) => propositionMap.has(text),
+      },
       { type: 'and', check: (text: string) => text === '&' },
       { type: 'andalso', check: (text: string) => text === '&&' },
       { type: 'or', check: (text: string) => text === '|' },
@@ -166,110 +182,88 @@ export function MotivSyntaxHighlightPlugin({
     );
   });
 
-  useEffect(
-    () =>
-      mergeRegister(
-        editor.registerNodeTransform(
-          UnrecognizedNode,
-          (unrecognizedNode: UnrecognizedNode) => {
-            if (tryMergeUnrecognizedNode(unrecognizedNode)) return;
+  useEffect(() => {
+    function resolveTextNode(content: string): TextNode {
+      const tokenType = getTokenType.value(content);
+      if (tokenType) {
+        return $createTokenNode(content, tokenType);
+      }
 
-            const content = unrecognizedNode.getTextContent();
-            const splitText = content.split(pattern.value);
-            if (splitText.length === 1) {
-              if (isWhitespace(content))
-                unrecognizedNode.replace($createWhitespaceNode(content));
+      return !content.match(/\S/)
+        ? $createWhitespaceNode(content)
+        : $createUnrecognizedNode(content);
+    }
 
-              return;
-            }
+    return mergeRegister(
+      editor.registerNodeTransform(
+        UnrecognizedNode,
+        (unrecognizedNode: UnrecognizedNode) => {
+          if (tryMergeUnrecognizedNode(unrecognizedNode)) return;
 
-            const [start = 0, end = 0] = getSelectionStartEnd();
-            let currentNodeStart = 0;
-
-            for (const textPart of splitText) {
-              if (textPart === '') continue;
-              const currentNodeEnd = currentNodeStart + textPart.length;
-
-              const tokenType = getTokenType.value(textPart);
-
-              const newNode = resolveLexicalNode(textPart, tokenType);
-              unrecognizedNode.insertBefore(newNode);
-              if (currentNodeStart <= start && end <= currentNodeEnd) {
-                newNode.select(
-                  start - currentNodeStart,
-                  end - currentNodeStart
-                );
-              }
-
-              currentNodeStart += textPart.length;
-            }
-
-            unrecognizedNode.remove();
-
-            function resolveLexicalNode(
-              content: string,
-              tokenType?: TokenType | null
-            ): TextNode {
-              if (tokenType) {
-                return $createTokenNode(content, tokenType);
-              }
-
-              return !content.match(/\S/)
-                ? $createWhitespaceNode(content)
-                : $createUnrecognizedNode(content);
-            }
+          const content = unrecognizedNode.getTextContent();
+          const splitText = content.split(pattern.value).filter(isNotEmpty);
+          if (splitText.length === 1) {
+            return;
           }
-        ),
-        editor.registerNodeTransform(
-          WhitespaceNode,
-          (whitespaceNode: WhitespaceNode) => {
-            if (tryMergeWhitespaceNode(whitespaceNode)) return;
 
-            const content = whitespaceNode.getTextContent();
-            const splitText = content.split(pattern.value);
-            if (splitText.length === 1) {
-              if (isWhitespace(content)) return;
-              whitespaceNode.replace($createUnrecognizedNode(content));
-              return;
+          const [start = 0, end = 0] = getSelectionStartEnd();
+          let currentNodeStart = 0;
+
+          for (const textPart of splitText) {
+            const currentNodeEnd = currentNodeStart + textPart.length;
+
+            const newNode = resolveTextNode(textPart);
+            unrecognizedNode.insertBefore(newNode);
+            if (shouldNodeHaveSelection(currentNodeEnd)) {
+              newNode.select(start - currentNodeStart, end - currentNodeStart);
             }
 
-            const [start = 0, end = 0] = getSelectionStartEnd();
-            let offset = 0;
-
-            for (const textPart of splitText) {
-              if (textPart === '') continue;
-              offset += textPart.length;
-
-              const tokenType = getTokenType.value(textPart);
-              if (!tokenType && !isWhitespace(textPart)) return;
-
-              const newNode = resolveLexicalNode(textPart, tokenType);
-              if (start <= offset && offset <= end) {
-                whitespaceNode.insertBefore(newNode);
-                newNode.selectEnd();
-              } else {
-                whitespaceNode.insertBefore(newNode);
-              }
-            }
-            whitespaceNode.remove();
-
-            function resolveLexicalNode(
-              content: string,
-              tokenType?: TokenType | null
-            ): LexicalNode {
-              if (tokenType) {
-                return $createTokenNode(content, tokenType);
-              }
-
-              return !content.match(/\S/)
-                ? $createWhitespaceNode(content)
-                : $createUnrecognizedNode(content);
-            }
+            currentNodeStart += textPart.length;
           }
-        )
+
+          unrecognizedNode.remove();
+
+          function shouldNodeHaveSelection(currentNodeEnd: number) {
+            return currentNodeStart <= start && end <= currentNodeEnd;
+          }
+        }
       ),
-    []
-  );
+      editor.registerNodeTransform(
+        WhitespaceNode,
+        (whitespaceNode: WhitespaceNode) => {
+          if (tryMergeWhitespaceNode(whitespaceNode)) return;
+
+          const content = whitespaceNode.getTextContent();
+          const splitText = content.split(pattern.value).filter(isNotEmpty);
+          if (splitText.length === 1) {
+            if (isWhitespace(content)) return;
+            whitespaceNode.replace($createUnrecognizedNode(content));
+            return;
+          }
+
+          const [start = 0, end = 0] = getSelectionStartEnd();
+          let offset = 0;
+
+          for (const textPart of splitText) {
+            if (textPart === '') continue;
+            offset += textPart.length;
+
+            const tokenType = getTokenType.value(textPart);
+            if (!tokenType && !isWhitespace(textPart)) return;
+
+            const newNode = resolveTextNode(textPart);
+            if (start <= offset && offset <= end) {
+              whitespaceNode.insertBefore(newNode);
+              newNode.selectEnd();
+            } else {
+              whitespaceNode.insertBefore(newNode);
+            }
+          }
+          whitespaceNode.remove();
+        }
+      )
+    );
+  }, []);
 
   useEffect(
     () =>
@@ -285,7 +279,7 @@ export function MotivSyntaxHighlightPlugin({
 
         node.replace(textNode);
       }),
-    [propositions.value]
+    [propositions]
   );
 
   return null;

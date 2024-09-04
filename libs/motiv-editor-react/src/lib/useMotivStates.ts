@@ -13,6 +13,7 @@ import {
   SELECTION_CHANGE_COMMAND,
 } from 'lexical';
 import SuggestionsState from './SuggestionsState';
+import { Proposition } from 'motiv-editor-react';
 
 export interface State {
   readonly type: string;
@@ -32,7 +33,7 @@ export interface State {
   ): boolean;
   documentClickHandler(event: Event): void;
   suggestionVisible: boolean;
-  getSearchCriteria(): string;
+  getSearchText(): string;
 }
 
 export interface StateContext {
@@ -67,11 +68,12 @@ function getSourceCodeCaretPosition(): number | null {
   return globalOffset;
 }
 
-export function useMotivStates(atomSuggestions: Signal<Suggestion[]>) {
+export function useMotivStates(propositionSuggestions: Proposition[]) {
   const [editor] = useLexicalComposerContext();
   const selectedIndex = useSignal(0);
-  const autoSuggester = useComputed(
-    () => new AutoSuggester(atomSuggestions.value)
+  const autoSuggester = useMemo(
+    () => new AutoSuggester(propositionSuggestions),
+    [propositionSuggestions]
   );
   const suggestions = useSignal<Suggestion[]>(nullSuggestions);
   const initialFreeTextState = useMemo(
@@ -91,10 +93,6 @@ export function useMotivStates(atomSuggestions: Signal<Suggestion[]>) {
 
   const updateSuggestions = useCallback(() => {
     const editorText = editor.getRootElement()?.textContent;
-    if (!editorText) {
-      console.log('Editor text is empty');
-      return;
-    }
 
     editor.getEditorState().read(() => {
       const globalOffset = getSourceCodeCaretPosition();
@@ -105,11 +103,11 @@ export function useMotivStates(atomSuggestions: Signal<Suggestion[]>) {
 
       const searchCriteria =
         state.value instanceof SuggestionsState
-          ? state.value.getSearchCriteria()
+          ? state.value.getSearchText()
           : '';
 
-      suggestions.value = autoSuggester.value.getSuggestions(
-        editorText,
+      suggestions.value = autoSuggester.getSuggestions(
+        editorText ?? '',
         globalOffset,
         searchCriteria
       );
