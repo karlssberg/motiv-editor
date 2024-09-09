@@ -23,28 +23,50 @@ export interface ErrorInfo {
 }
 
 class MotivSemanticErrorListener extends PropositionalLogicListener {
-  private readonly propositions: Set<string>;
   private readonly errors: ErrorInfo[] = [];
+  private readonly propositionLookup: Map<string, Proposition>;
 
-  constructor(propositions: string[]) {
+  constructor(private readonly propositions: Proposition[]) {
     super();
-    this.propositions = new Set(propositions);
+    this.propositionLookup = new Map(
+      propositions.map((p) => [Proposition.normalizeProposition(p.template), p])
+    );
   }
   exitProposition = (ctx: PropositionContext): void => {
-    const proposition = ctx.getText();
-    const normalizedProposition = normalizeProposition(proposition);
-    if (!this.propositions.has(normalizedProposition)) {
+    const propositionExpression = ctx.getText();
+    const [isValidProposition, errors] = this.validateProposition(
+      propositionExpression
+    );
+    if (!isValidProposition) {
       this.errors.push({
         line: ctx.start!.line,
         column: ctx.start!.column,
         token: ctx.start,
-        message: `The name '${proposition}' is not a recognized proposition`,
+        message: errors.join('\n'),
       });
     }
   };
 
   getErrors(): ErrorInfo[] {
     return this.errors;
+  }
+
+  validateProposition(propositionExpression: string): [boolean, string[]] {
+    const proposition = this.propositionLookup.get(
+      Proposition.normalizeProposition(propositionExpression)
+    );
+
+    if (!proposition) {
+      return [
+        false,
+        [`The name '${propositionExpression}' is not a recognized proposition`],
+      ];
+    }
+    const [isValid, errors] = proposition.validateExpression(
+      propositionExpression
+    );
+
+    return isValid ? [true, []] : [false, errors];
   }
 }
 
@@ -78,27 +100,22 @@ interface MotivParserResult {
   errors: ErrorInfo[];
 }
 
-function normalizeProposition(proposition: string): string {
-  return proposition.replace(/\{[^}]\}/g, '').toUpperCase();
+function createMotivLexer(input: string) {
+  const charStream = CharStream.fromString(input);
+  const lexer = new PropositionalLogicLexer(charStream);
+  const tokenStream = new CommonTokenStream(lexer);
+  return tokenStream;
 }
 
 export function createMotivParser(
   propositions: Proposition[]
 ): (input: string) => MotivParserResult {
-  const normalizedPropositions = propositions.map((propositions) =>
-    normalizeProposition(propositions.template)
-  );
-
   return (input: string) => {
-    const charStream = CharStream.fromString(input);
-    const lexer = new PropositionalLogicLexer(charStream);
-    const tokenStream = new CommonTokenStream(lexer);
+    const tokenStream = createMotivLexer(input);
     const parser = new PropositionalLogicParser(tokenStream);
 
     const syntaxErrorListener = new MotivSyntaxErrorListener();
-    const semanticErrorListener = new MotivSemanticErrorListener(
-      normalizedPropositions
-    );
+    const semanticErrorListener = new MotivSemanticErrorListener(propositions);
     parser.addErrorListener(syntaxErrorListener);
     parser.addParseListener(semanticErrorListener);
     parser.formula();

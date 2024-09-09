@@ -11,6 +11,7 @@ import {
 import { createPortal } from 'react-dom';
 import { mergeRegister } from '@lexical/utils';
 import {
+  $getRoot,
   $getSelection,
   $isRangeSelection,
   COMMAND_PRIORITY_NORMAL,
@@ -34,12 +35,13 @@ import {
   ComputePositionReturn,
 } from '@floating-ui/react';
 import { escapeRegExp } from './escapeRegExp';
-import { SpecResource } from '../../../../apps/react-motiv-playground/src/app/MotivClient';
+import { Proposition } from './MotivEditor';
 
 interface MotivPluginProps {
-  propositions: ISpecResource[];
+  propositions: Proposition[];
   containerRef: RefObject<HTMLElement>;
   defaultPositionRef: RefObject<HTMLElement>;
+  onChange?: (source: string) => void;
 }
 
 const computePositionOptions: Partial<ComputePositionConfig> = {
@@ -55,6 +57,7 @@ interface Coords {
 export function MotivPlugin({
   propositions,
   defaultPositionRef,
+  onChange,
 }: MotivPluginProps) {
   const [editor] = useLexicalComposerContext();
   const [dropdownPosition, setDropdownPosition] = useState<
@@ -63,6 +66,14 @@ export function MotivPlugin({
   const dropdownRef = useRef(null);
   const [isBrowser, setIsBrowser] = useState(false);
   const { state, selectedIndex, suggestions } = useMotivStates(propositions);
+
+  useEffect(
+    () =>
+      editor.registerTextContentListener((text) => {
+        onChange && onChange(text);
+      }),
+    [editor]
+  );
 
   useEffect(
     () =>

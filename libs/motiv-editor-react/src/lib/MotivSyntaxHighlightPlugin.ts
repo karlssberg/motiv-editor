@@ -26,17 +26,32 @@ function isNotEmpty(text: string) {
   return !!text;
 }
 
-const parameterPattern = /\{[^}]+\}/g;
-
+const whitespacePattern = /\s+/;
 function isWhitespace(text: string) {
-  return !text.match(/\S/);
+  return !!text.match(whitespacePattern);
 }
+
+function* tokenize(text: string): Iterable<string> {
+  const parameterPattern = Proposition.parameterPattern;
+  const splitText = text.split(parameterPattern).filter(isNotEmpty);
+  let insideQuote = false;
+  let currentToken;
+  for (const textPart of splitText) {
+    if (textPart === '"') {
+      insideQuote = !insideQuote;
+      yield textPart;
+      continue;
+    }
+  }
+}
+
 interface MotivSyntaxHighlightPluginProps {
   propositions: Proposition[];
 }
 
 function tryMergeUnrecognizedNode(unrecognizedNode: UnrecognizedNode) {
   const previousNode = unrecognizedNode.getPreviousSibling();
+
   if ($isUnrecognizedNode(previousNode)) {
     const previousText = previousNode.getTextContent();
     const currentText = unrecognizedNode.getTextContent();
@@ -122,7 +137,8 @@ export function MotivSyntaxHighlightPlugin({
   const [editor] = useLexicalComposerContext();
 
   const propositionMap = useMemo(
-    () => new Map(propositions.map((spec) => [spec.id, spec])),
+    () =>
+      new Map(propositions.map((proposition) => [proposition.id, proposition])),
     [propositions]
   );
 
@@ -130,29 +146,25 @@ export function MotivSyntaxHighlightPlugin({
     () => new Map(Object.entries(operatorLiteralToTokenType))
   );
 
-  const pattern = useComputed(() => {
-    const propositionsPattern = propositions
-      .map((suggestion) => suggestion.template)
-      .map(escapeRegExp)
-      .join('|');
+  const operatorAndParenthesisPattern = useComputed(() => {
     const operatorsPattern = [...operators.value.keys()]
       .map(escapeRegExp)
       .join('|');
-    const whitespacePattern = '\\s+';
+
     const parenthesesPattern = ['(', ')'].map(escapeRegExp).join('|');
-    const patterns = [
-      propositionsPattern,
-      whitespacePattern,
-      operatorsPattern,
-      parenthesesPattern,
-    ].filter((pattern) => !!pattern);
+
+    const patterns = [operatorsPattern, parenthesesPattern].filter(
+      (pattern) => !!pattern
+    );
+
     const regExpPattern = `(${patterns.join('|')})`;
-    return new RegExp(regExpPattern, 'g');
+    return new RegExp(regExpPattern, 'gu');
   });
 
   const getTokenType = useComputed(() => (text: string): TokenType | null => {
-    if (propositionMap.has(text.replace(parameterPattern, '')))
-      return 'proposition';
+    const normalizedText = Proposition.normalizeProposition(text);
+    const proposition = propositionMap.get(normalizedText);
+    if (proposition?.validateExpression(text)[0]) return 'proposition';
     if (operators.value.has(text)) return operators.value.get(text)!;
     if (text === '(') return 'openParenthesis';
     if (text === ')') return 'closeParenthesis';
@@ -165,7 +177,12 @@ export function MotivSyntaxHighlightPlugin({
     const validationCheck = [
       {
         type: 'proposition',
-        check: (text: string) => propositionMap.has(text),
+        check: (text: string) => {
+          const proposition = propositionMap.get(
+            Proposition.normalizeProposition(text)
+          );
+          return proposition ? proposition.validateExpression(text)[0] : false;
+        },
       },
       { type: 'and', check: (text: string) => text === '&' },
       { type: 'andalso', check: (text: string) => text === '&&' },
@@ -189,7 +206,7 @@ export function MotivSyntaxHighlightPlugin({
         return $createTokenNode(content, tokenType);
       }
 
-      return !content.match(/\S/)
+      return content.match(/^\s+$/)
         ? $createWhitespaceNode(content)
         : $createUnrecognizedNode(content);
     }
@@ -201,25 +218,32 @@ export function MotivSyntaxHighlightPlugin({
           if (tryMergeUnrecognizedNode(unrecognizedNode)) return;
 
           const content = unrecognizedNode.getTextContent();
-          const splitText = content.split(pattern.value).filter(isNotEmpty);
-          if (splitText.length === 1) {
-            return;
-          }
+          const splitByOperatorsAndParenthesis = content
+            .split(operatorAndParenthesisPattern.value)
+            .filter(isNotEmpty);
 
           const [start = 0, end = 0] = getSelectionStartEnd();
           let currentNodeStart = 0;
 
-          for (const textPart of splitText) {
-            const currentNodeEnd = currentNodeStart + textPart.length;
+          for (const segment of splitByOperatorsAndParenthesis)
+            for (const textPart of segment.split(/(^\s+|\s+$)/)) {
+              if (textPart === '') continue;
+              const currentNodeEnd = currentNodeStart + textPart.length;
 
-            const newNode = resolveTextNode(textPart);
-            unrecognizedNode.insertBefore(newNode);
-            if (shouldNodeHaveSelection(currentNodeEnd)) {
-              newNode.select(start - currentNodeStart, end - currentNodeStart);
+              const newNode = resolveTextNode(textPart);
+
+              if (textPart === content && $isUnrecognizedNode(newNode)) return;
+
+              unrecognizedNode.insertBefore(newNode);
+              if (shouldNodeHaveSelection(currentNodeEnd)) {
+                newNode.select(
+                  start - currentNodeStart,
+                  end - currentNodeStart
+                );
+              }
+
+              currentNodeStart += textPart.length;
             }
-
-            currentNodeStart += textPart.length;
-          }
 
           unrecognizedNode.remove();
 
@@ -234,12 +258,8 @@ export function MotivSyntaxHighlightPlugin({
           if (tryMergeWhitespaceNode(whitespaceNode)) return;
 
           const content = whitespaceNode.getTextContent();
-          const splitText = content.split(pattern.value).filter(isNotEmpty);
-          if (splitText.length === 1) {
-            if (isWhitespace(content)) return;
-            whitespaceNode.replace($createUnrecognizedNode(content));
-            return;
-          }
+          const splitText = content.split(/(^\s+|\s+$)/).filter(isNotEmpty);
+          if (splitText.length === 1 && isWhitespace(content)) return;
 
           const [start = 0, end = 0] = getSelectionStartEnd();
           let offset = 0;
@@ -247,9 +267,6 @@ export function MotivSyntaxHighlightPlugin({
           for (const textPart of splitText) {
             if (textPart === '') continue;
             offset += textPart.length;
-
-            const tokenType = getTokenType.value(textPart);
-            if (!tokenType && !isWhitespace(textPart)) return;
 
             const newNode = resolveTextNode(textPart);
             if (start <= offset && offset <= end) {
@@ -273,7 +290,7 @@ export function MotivSyntaxHighlightPlugin({
           return;
         }
         const content = node.getTextContent();
-        const textNode = content.match(/\s/)
+        const textNode = content.match(/^\s+$/)
           ? $createWhitespaceNode(content)
           : $createUnrecognizedNode(content);
 

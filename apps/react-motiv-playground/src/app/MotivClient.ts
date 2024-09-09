@@ -27,7 +27,7 @@ export class Client {
   /**
    * @return Success
    */
-  ruleGET(ruleName: string): Promise<RuleResource> {
+  ruleGET(ruleName: string): Promise<GetRuleResource> {
     let url_ = this.baseUrl + '/motiv/rule/{ruleName}';
     if (ruleName === undefined || ruleName === null)
       throw new Error("The parameter 'ruleName' must be defined.");
@@ -46,7 +46,7 @@ export class Client {
     });
   }
 
-  protected processRuleGET(response: Response): Promise<RuleResource> {
+  protected processRuleGET(response: Response): Promise<GetRuleResource> {
     const status = response.status;
     let _headers: any = {};
     if (response.headers && response.headers.forEach) {
@@ -59,7 +59,7 @@ export class Client {
           _responseText === ''
             ? null
             : JSON.parse(_responseText, this.jsonParseReviver);
-        result200 = RuleResource.fromJS(resultData200);
+        result200 = GetRuleResource.fromJS(resultData200);
         return result200;
       });
     } else if (status !== 200 && status !== 204) {
@@ -72,13 +72,13 @@ export class Client {
         );
       });
     }
-    return Promise.resolve<RuleResource>(null as any);
+    return Promise.resolve<GetRuleResource>(null as any);
   }
 
   /**
    * @return Success
    */
-  rulePUT(ruleName: string, body: RuleResource): Promise<void> {
+  rulePUT(ruleName: string, body: PutRuleResource): Promise<void> {
     let url_ = this.baseUrl + '/motiv/rule/{ruleName}';
     if (ruleName === undefined || ruleName === null)
       throw new Error("The parameter 'ruleName' must be defined.");
@@ -122,6 +122,54 @@ export class Client {
     }
     return Promise.resolve<void>(null as any);
   }
+}
+
+export class GetRuleResource implements IGetRuleResource {
+  compatiblePropositions?: PropositionResource[] | undefined;
+  source?: string | undefined;
+
+  constructor(data?: IGetRuleResource) {
+    if (data) {
+      for (var property in data) {
+        if (data.hasOwnProperty(property))
+          (<any>this)[property] = (<any>data)[property];
+      }
+    }
+  }
+
+  init(_data?: any) {
+    if (_data) {
+      if (Array.isArray(_data['compatiblePropositions'])) {
+        this.compatiblePropositions = [] as any;
+        for (let item of _data['compatiblePropositions'])
+          this.compatiblePropositions!.push(PropositionResource.fromJS(item));
+      }
+      this.source = _data['source'];
+    }
+  }
+
+  static fromJS(data: any): GetRuleResource {
+    data = typeof data === 'object' ? data : {};
+    let result = new GetRuleResource();
+    result.init(data);
+    return result;
+  }
+
+  toJSON(data?: any) {
+    data = typeof data === 'object' ? data : {};
+    if (Array.isArray(this.compatiblePropositions)) {
+      data['compatiblePropositions'] = [];
+      for (let item of this.compatiblePropositions)
+        data['compatiblePropositions'].push(item.toJSON());
+    }
+    data['source'] = this.source;
+    return data;
+  }
+}
+
+export interface IGetRuleResource {
+  compatiblePropositions?: PropositionResource[] | undefined;
+  source?: string | undefined;
 }
 
 export enum MotivPrimitive {
@@ -228,11 +276,10 @@ export interface IPropositionResource {
   template?: string | undefined;
 }
 
-export class RuleResource implements IRuleResource {
-  compatiblePropositions?: PropositionResource[] | undefined;
+export class PutRuleResource implements IPutRuleResource {
   source?: string | undefined;
 
-  constructor(data?: IRuleResource) {
+  constructor(data?: IPutRuleResource) {
     if (data) {
       for (var property in data) {
         if (data.hasOwnProperty(property))
@@ -243,41 +290,30 @@ export class RuleResource implements IRuleResource {
 
   init(_data?: any) {
     if (_data) {
-      if (Array.isArray(_data['compatiblePropositions'])) {
-        this.compatiblePropositions = [] as any;
-        for (let item of _data['compatiblePropositions'])
-          this.compatiblePropositions!.push(PropositionResource.fromJS(item));
-      }
       this.source = _data['source'];
     }
   }
 
-  static fromJS(data: any): RuleResource {
+  static fromJS(data: any): PutRuleResource {
     data = typeof data === 'object' ? data : {};
-    let result = new RuleResource();
+    let result = new PutRuleResource();
     result.init(data);
     return result;
   }
 
   toJSON(data?: any) {
     data = typeof data === 'object' ? data : {};
-    if (Array.isArray(this.compatiblePropositions)) {
-      data['compatiblePropositions'] = [];
-      for (let item of this.compatiblePropositions)
-        data['compatiblePropositions'].push(item.toJSON());
-    }
     data['source'] = this.source;
     return data;
   }
 }
 
-export interface IRuleResource {
-  compatiblePropositions?: PropositionResource[] | undefined;
+export interface IPutRuleResource {
   source?: string | undefined;
 }
 
 export class ApiException extends Error {
-  message: string;
+  override message: string;
   status: number;
   response: string;
   headers: { [key: string]: any };

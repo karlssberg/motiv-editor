@@ -26,7 +26,7 @@ import {
 import { MotivSyntaxErrorHighlighterPlugin } from './MotivSyntaxErrorHighlighterPlugin';
 
 export interface ParameterInfo {
-  type: PrimitiveTypeNames;
+  type: `${PrimitiveTypeNames}`;
 }
 export enum PrimitiveTypeNames {
   Unknown = 'unknown',
@@ -36,16 +36,30 @@ export enum PrimitiveTypeNames {
   Integer = 'integer',
 }
 
+const parameterPattern = /(?:[{]"(?:[^"]|\\")*"[}]|[{](?:[^}])*[}])?/g;
+const captureParameterPattern = captureExpression(parameterPattern);
+
+function captureExpression(regex: RegExp, flags?: string): RegExp {
+  return new RegExp(`(${regex.source})`, flags ?? regex.flags);
+}
+
 export class Proposition {
   public id: string;
   public template: string;
   public parameters: Record<string, ParameterInfo>;
   public templateParts: string[];
+  public static parameterPattern = parameterPattern;
+  public static propositionPattern =
+    /[\p{L}_](?:[\p{L}\-_]+(?:[{]"(?:[^"]|\\")*"[}]|[{](?:[^}])*[}])?)+/u;
+
+  public static normalizeProposition(proposition: string): string {
+    return proposition.replace(parameterPattern, '');
+  }
 
   constructor(
     id: string,
     template: string,
-    parameters: Record<string, ParameterInfo> = {}
+    parameters: { [parameterName: string]: ParameterInfo } = {}
   ) {
     this.id = id;
     this.template = template;
@@ -53,7 +67,7 @@ export class Proposition {
     this.templateParts = this.splitTemplate(template);
   }
 
-  validate(candidate: string): [boolean, string[]] {
+  validateExpression(candidate: string): [boolean, string[]] {
     const candidateParts = this.splitTemplate(candidate);
     const errors: string[] = [];
     let processedCandidate = '';
@@ -63,8 +77,9 @@ export class Proposition {
       const candidatePart = candidateParts[i];
       if (!candidatePart) {
         errors.push(
-          `Superfluous text "${candidatePart}" to the proposition "${this.template}"`
+          `Invalid token. Expecting to find "${templatePart}" at the end of "${candidate}".`
         );
+        break;
       }
 
       if (isParameter(templatePart)) {
@@ -93,17 +108,24 @@ export class Proposition {
   }
 
   private splitTemplate(template: string): string[] {
-    return template.split(/([\{[^}+\}])/);
+    return template
+      .split(captureParameterPattern)
+      .filter((part) => part !== '');
   }
 }
 
 interface MotivEditorProps {
   source: string;
   propositions: Proposition[];
+  onChange?: (source: string) => void;
 }
 
 // Main editor component
-export function MotivEditor({ propositions, source }: MotivEditorProps) {
+export function MotivEditor({
+  propositions,
+  source,
+  onChange,
+}: MotivEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const defaultPositionRef = useRef<HTMLSpanElement>(null);
   const initialConfig = useMemo<InitialConfigType>(
@@ -154,6 +176,7 @@ export function MotivEditor({ propositions, source }: MotivEditorProps) {
           propositions={propositions}
           containerRef={containerRef}
           defaultPositionRef={defaultPositionRef}
+          onChange={onChange}
         />
         <MotivSyntaxHighlightPlugin propositions={propositions} />
         <MotivSyntaxErrorHighlighterPlugin propositions={propositions} />
@@ -167,7 +190,7 @@ function isInteger(candidate: string): boolean {
 }
 
 function isDecimal(candidate: string): boolean {
-  return /^\d+\.\d+$/.test(candidate);
+  return /^\d+(\.\d+)?$/.test(candidate);
 }
 
 function isDateTime(candidate: string): boolean {
@@ -175,19 +198,23 @@ function isDateTime(candidate: string): boolean {
 }
 
 function isQuotedString(candidate: string): boolean {
-  return /^"[^"]"$/.test(candidate);
+  return /^"[^"]*"$/.test(candidate);
 }
 
-function validateParameter(value: string, type?: PrimitiveTypeNames): boolean {
+function validateParameter(
+  value: string,
+  type?: `${PrimitiveTypeNames}`
+): boolean {
+  const normalizedValue = value.trim();
   switch (type) {
     case PrimitiveTypeNames.Decimal:
-      return isDecimal(value);
+      return isDecimal(normalizedValue);
     case PrimitiveTypeNames.String:
-      return isQuotedString(value);
+      return isQuotedString(normalizedValue);
     case PrimitiveTypeNames.DateTime:
-      return isDateTime(value);
+      return isDateTime(normalizedValue);
     case PrimitiveTypeNames.Integer:
-      return isInteger(value);
+      return isInteger(normalizedValue);
     default:
       return false;
   }

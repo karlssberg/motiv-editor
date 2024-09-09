@@ -5,8 +5,10 @@ import { AbstractParseTreeVisitor } from "antlr4ng";
 
 import { FormulaContext } from "./PropositionalLogicParser.js";
 import { ExpressionContext } from "./PropositionalLogicParser.js";
-import { XorExpressionContext } from "./PropositionalLogicParser.js";
+import { ConditionalOrExpressionContext } from "./PropositionalLogicParser.js";
+import { ConditionalAndExpressionContext } from "./PropositionalLogicParser.js";
 import { OrExpressionContext } from "./PropositionalLogicParser.js";
+import { XorExpressionContext } from "./PropositionalLogicParser.js";
 import { AndExpressionContext } from "./PropositionalLogicParser.js";
 import { NotExpressionContext } from "./PropositionalLogicParser.js";
 import { PropositionContext } from "./PropositionalLogicParser.js";
@@ -33,17 +35,29 @@ export class PropositionalLogicVisitor<Result> extends AbstractParseTreeVisitor<
      */
     visitExpression?: (ctx: ExpressionContext) => Result;
     /**
-     * Visit a parse tree produced by `PropositionalLogicParser.xorExpression`.
+     * Visit a parse tree produced by `PropositionalLogicParser.conditionalOrExpression`.
      * @param ctx the parse tree
      * @return the visitor result
      */
-    visitXorExpression?: (ctx: XorExpressionContext) => Result;
+    visitConditionalOrExpression?: (ctx: ConditionalOrExpressionContext) => Result;
+    /**
+     * Visit a parse tree produced by `PropositionalLogicParser.conditionalAndExpression`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitConditionalAndExpression?: (ctx: ConditionalAndExpressionContext) => Result;
     /**
      * Visit a parse tree produced by `PropositionalLogicParser.orExpression`.
      * @param ctx the parse tree
      * @return the visitor result
      */
     visitOrExpression?: (ctx: OrExpressionContext) => Result;
+    /**
+     * Visit a parse tree produced by `PropositionalLogicParser.xorExpression`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitXorExpression?: (ctx: XorExpressionContext) => Result;
     /**
      * Visit a parse tree produced by `PropositionalLogicParser.andExpression`.
      * @param ctx the parse tree

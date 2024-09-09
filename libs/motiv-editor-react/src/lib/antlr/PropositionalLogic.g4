@@ -5,19 +5,27 @@ formula
     ;
 
 expression
-    : xorExpression
+    : conditionalOrExpression
     ;
-
-xorExpression
-    : orExpression (WS XOR WS orExpression)*
+    
+conditionalOrExpression
+    : conditionalAndExpression (OR_ELSE conditionalAndExpression)*
     ;
-
+    
+conditionalAndExpression
+    : orExpression (AND_ALSO orExpression)*
+    ;
+    
 orExpression
-    : andExpression (WS (OR | OR_ELSE) WS andExpression)*
+    : xorExpression (OR xorExpression)*
+    ;
+    
+xorExpression
+    : andExpression (XOR andExpression)*
     ;
 
 andExpression
-    : notExpression (WS (AND | AND_ALSO) WS notExpression)*
+    : notExpression (AND notExpression)*
     ;
 
 notExpression
@@ -29,12 +37,13 @@ notExpression
 proposition
     : PROPOSITION
     ;
-    
 
 // Lexer Rules
-PROPOSITION                    : (PROPOSITION_PARAMETER? IDENTIFIER_SEGMENT )+ PROPOSITION_PARAMETER?;
-fragment PROPOSITION_PARAMETER : LBRACE PRIMITIVE_VALUE RBRACE;    
-PRIMITIVE_VALUE                : QUOTED_STRING | NUMBER;
+PROPOSITION                    : IDENTIFIER_SEGMENT_START ( IDENTIFIER_SEGMENT | PARAMETER )*;
+PARAMETER                      : '{' ( ESC | ~[}\\] )* '}';
+fragment ESC                   : '\\' ([}\\/bfnrt] | UNICODE);
+fragment UNICODE               : 'u' HEX HEX HEX HEX;
+fragment HEX                   : [0-9a-fA-F];
 AND_ALSO                       : '&&';
 OR_ELSE                        : '||';
 AND 	                       : '&';
@@ -43,14 +52,7 @@ NOT                            : '!';
 XOR                            : '^';
 LPAREN                         : '(';
 RPAREN                         : ')';
-LBRACE                         : '{';
-RBRACE                         : '}';
-IDENTIFIER_SEGMENT             : [a-zA-Z0-9_\-]+;
-NUMBER                         : [0-9]+('.'[0-9]+)?;
-QUOTED_STRING                  : '"' ( ESC | ~["\\] )* '"';
-fragment ESC                   : '\\' (["\\/bfnrt] | UNICODE);
-fragment UNICODE               : 'u' HEX HEX HEX HEX;
-fragment HEX                   : [0-9a-fA-F];
-WS                             : [ \t\r\n]+;
-IGNORE_WS                      : [ \t\r\n]+ -> skip;
+IDENTIFIER_SEGMENT_START       : [\p{L}_];
+IDENTIFIER_SEGMENT             : [\p{L}\p{Nd}_\-]+;
+WS                             : [ \t\r\n]+ -> skip;
 

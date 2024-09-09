@@ -5,8 +5,10 @@ import { ErrorNode, ParseTreeListener, ParserRuleContext, TerminalNode } from "a
 
 import { FormulaContext } from "./PropositionalLogicParser.js";
 import { ExpressionContext } from "./PropositionalLogicParser.js";
-import { XorExpressionContext } from "./PropositionalLogicParser.js";
+import { ConditionalOrExpressionContext } from "./PropositionalLogicParser.js";
+import { ConditionalAndExpressionContext } from "./PropositionalLogicParser.js";
 import { OrExpressionContext } from "./PropositionalLogicParser.js";
+import { XorExpressionContext } from "./PropositionalLogicParser.js";
 import { AndExpressionContext } from "./PropositionalLogicParser.js";
 import { NotExpressionContext } from "./PropositionalLogicParser.js";
 import { PropositionContext } from "./PropositionalLogicParser.js";
@@ -38,15 +40,25 @@ export class PropositionalLogicListener implements ParseTreeListener {
      */
     exitExpression?: (ctx: ExpressionContext) => void;
     /**
-     * Enter a parse tree produced by `PropositionalLogicParser.xorExpression`.
+     * Enter a parse tree produced by `PropositionalLogicParser.conditionalOrExpression`.
      * @param ctx the parse tree
      */
-    enterXorExpression?: (ctx: XorExpressionContext) => void;
+    enterConditionalOrExpression?: (ctx: ConditionalOrExpressionContext) => void;
     /**
-     * Exit a parse tree produced by `PropositionalLogicParser.xorExpression`.
+     * Exit a parse tree produced by `PropositionalLogicParser.conditionalOrExpression`.
      * @param ctx the parse tree
      */
-    exitXorExpression?: (ctx: XorExpressionContext) => void;
+    exitConditionalOrExpression?: (ctx: ConditionalOrExpressionContext) => void;
+    /**
+     * Enter a parse tree produced by `PropositionalLogicParser.conditionalAndExpression`.
+     * @param ctx the parse tree
+     */
+    enterConditionalAndExpression?: (ctx: ConditionalAndExpressionContext) => void;
+    /**
+     * Exit a parse tree produced by `PropositionalLogicParser.conditionalAndExpression`.
+     * @param ctx the parse tree
+     */
+    exitConditionalAndExpression?: (ctx: ConditionalAndExpressionContext) => void;
     /**
      * Enter a parse tree produced by `PropositionalLogicParser.orExpression`.
      * @param ctx the parse tree
@@ -57,6 +69,16 @@ export class PropositionalLogicListener implements ParseTreeListener {
      * @param ctx the parse tree
      */
     exitOrExpression?: (ctx: OrExpressionContext) => void;
+    /**
+     * Enter a parse tree produced by `PropositionalLogicParser.xorExpression`.
+     * @param ctx the parse tree
+     */
+    enterXorExpression?: (ctx: XorExpressionContext) => void;
+    /**
+     * Exit a parse tree produced by `PropositionalLogicParser.xorExpression`.
+     * @param ctx the parse tree
+     */
+    exitXorExpression?: (ctx: XorExpressionContext) => void;
     /**
      * Enter a parse tree produced by `PropositionalLogicParser.andExpression`.
      * @param ctx the parse tree
