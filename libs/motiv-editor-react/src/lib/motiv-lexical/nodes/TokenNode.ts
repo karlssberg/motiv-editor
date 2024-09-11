@@ -5,7 +5,7 @@
   NodeKey,
   TextNode,
 } from 'lexical';
-import { TokenType } from '../TokenType';
+import { TokenType } from '../../TokenType';
 import {
   decorateTextAsInvalid,
   decorateTextAsValid,

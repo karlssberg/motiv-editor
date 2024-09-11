@@ -2,23 +2,22 @@
   $getNodeByKey,
   $getSelection,
   $isRangeSelection,
-  $isTextNode,
   LexicalEditor,
   TextNode,
   $createPoint,
   RangeSelection,
-  $getRoot,
-  ElementNode,
 } from 'lexical';
-import { Suggestion } from './Suggestion';
+import { Suggestion } from '../../Suggestion';
 import FreeTextState from './FreeTextState';
-import { State, StateContext } from './useMotivStates';
-import { $createUnrecognizedNode } from './nodes/UnrecognizedNode';
+import { StateContext } from '../../useMotivStates';
+import { $createUnrecognizedNode, State } from '../index';
 import { PointType, TextPointType } from 'lexical/LexicalSelection';
 
 export default class SuggestionsState implements State {
   readonly type = 'SuggestionsState';
   private searchText = '';
+  private suggestions: Suggestion[] = [];
+  private selectedSuggestion: Suggestion | null = null;
 
   constructor(
     private readonly editor: LexicalEditor,
@@ -29,34 +28,59 @@ export default class SuggestionsState implements State {
     this.editor = editor;
   }
 
+  setSuggestions(suggestions: Suggestion[]): void {
+    if (this.suggestions !== suggestions) {
+      this.selectedSuggestion = null;
+    }
+    this.suggestions = suggestions;
+  }
+
   arrowLeftHandler(event: KeyboardEvent): boolean {
-    this.context.selectedIndex.value = 0;
+    this.context.setSelectedSuggestion(null);
 
     this.setFreeTextState();
     return false;
   }
   arrowRightHandler(event: KeyboardEvent): boolean {
-    this.context.selectedIndex.value = 0;
+    this.context.setSelectedSuggestion(null);
 
     this.setFreeTextState();
     return false;
   }
 
   arrowDownHandler(event: KeyboardEvent): boolean {
-    this.context.selectedIndex.value =
-      (this.context.selectedIndex.value + 1) %
-      this.context.suggestions.value.length;
+    if (!this.selectedSuggestion) {
+      this.setSelectedSuggestion(this.suggestions[0]);
+      event.preventDefault();
+      return true;
+    }
+
+    for (let i = 0; i < this.suggestions.length; i++) {
+      if (this.selectedSuggestion?.value === this.suggestions[i].value) {
+        const nextIndex = (i + 1) % this.suggestions.length;
+        this.setSelectedSuggestion(this.suggestions[nextIndex]);
+        break;
+      }
+    }
 
     event.preventDefault();
     return true;
   }
 
   arrowUpHandler(event: KeyboardEvent): boolean {
-    this.context.selectedIndex.value =
-      (this.context.selectedIndex.value -
-        1 +
-        this.context.suggestions.value.length) %
-      this.context.suggestions.value.length;
+    if (!this.selectedSuggestion) {
+      this.setSelectedSuggestion(this.suggestions[this.suggestions.length - 1]);
+      event.preventDefault();
+      return true;
+    }
+    for (let i = 0; i < this.suggestions.length; i++) {
+      if (this.selectedSuggestion?.value === this.suggestions[i].value) {
+        const prevIndex =
+          (i - 1 + this.suggestions.length) % this.suggestions.length;
+        this.setSelectedSuggestion(this.suggestions[prevIndex]);
+        break;
+      }
+    }
 
     event.preventDefault();
     return true;
@@ -86,27 +110,19 @@ export default class SuggestionsState implements State {
   enterKeyHandler(event: KeyboardEvent | null): boolean {
     event?.preventDefault();
     const context = this.context;
-    return this.handleSuggestionSelection(
-      context.suggestions.value[context.selectedIndex.value]
-    );
+    return this.handleSuggestionSelection(this.selectedSuggestion!);
   }
 
   escapeKeyHandler(event: KeyboardEvent): boolean {
-    this.context.selectedIndex.value = 0;
+    this.context.setSelectedSuggestion(null);
 
     this.setFreeTextState();
     return false;
   }
 
-  clickHandler(
-    event: MouseEvent,
-    suggestion: Suggestion,
-    selectedIndex: number
-  ): boolean {
+  clickHandler(event: MouseEvent, suggestion: Suggestion): boolean {
     event.preventDefault();
-    return this.handleSuggestionSelection(
-      this.context.suggestions.value[selectedIndex]
-    );
+    return this.handleSuggestionSelection(suggestion);
   }
 
   private createStartPoint() {
@@ -185,7 +201,7 @@ export default class SuggestionsState implements State {
   }
 
   documentClickHandler() {
-    this.context.selectedIndex.value = 0;
+    this.context.setSelectedSuggestion(null);
     this.setFreeTextState();
   }
 
@@ -211,6 +227,11 @@ export default class SuggestionsState implements State {
       const newStartPoint = this.createStartPoint();
       this.startPoint = newStartPoint;
     }
+  }
+
+  private setSelectedSuggestion(suggestion: Suggestion | null) {
+    this.selectedSuggestion = suggestion;
+    this.context.setSelectedSuggestion(suggestion);
   }
 }
 

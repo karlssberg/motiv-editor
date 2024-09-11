@@ -13,7 +13,7 @@ import {
   Token,
 } from 'antlr4ng';
 import { PropositionalLogicLexer } from './antlr/PropositionalLogicLexer';
-import { Proposition } from 'motiv-editor-react';
+import { Proposition } from '../../Proposition';
 
 export interface ErrorInfo {
   line: number;
@@ -22,11 +22,36 @@ export interface ErrorInfo {
   message: string | undefined;
 }
 
+export function createMotivParser(
+  propositions: Proposition[]
+): (input: string) => MotivParserResult {
+  return (input: string) => {
+    const tokenStream = createMotivLexer(input);
+    const parser = new PropositionalLogicParser(tokenStream);
+
+    const syntaxErrorListener = new MotivSyntaxErrorListener();
+    const semanticErrorListener = new MotivSemanticErrorListener(propositions);
+    parser.addErrorListener(syntaxErrorListener);
+    parser.addParseListener(semanticErrorListener);
+    parser.formula();
+
+    const allErrors = [
+      ...syntaxErrorListener.getErrors(),
+      ...semanticErrorListener.getErrors(),
+    ];
+
+    return {
+      success: allErrors.length === 0,
+      errors: allErrors,
+    };
+  };
+}
+
 class MotivSemanticErrorListener extends PropositionalLogicListener {
   private readonly errors: ErrorInfo[] = [];
   private readonly propositionLookup: Map<string, Proposition>;
 
-  constructor(private readonly propositions: Proposition[]) {
+  constructor(propositions: Proposition[]) {
     super();
     this.propositionLookup = new Map(
       propositions.map((p) => [Proposition.normalizeProposition(p.template), p])
@@ -105,29 +130,4 @@ function createMotivLexer(input: string) {
   const lexer = new PropositionalLogicLexer(charStream);
   const tokenStream = new CommonTokenStream(lexer);
   return tokenStream;
-}
-
-export function createMotivParser(
-  propositions: Proposition[]
-): (input: string) => MotivParserResult {
-  return (input: string) => {
-    const tokenStream = createMotivLexer(input);
-    const parser = new PropositionalLogicParser(tokenStream);
-
-    const syntaxErrorListener = new MotivSyntaxErrorListener();
-    const semanticErrorListener = new MotivSemanticErrorListener(propositions);
-    parser.addErrorListener(syntaxErrorListener);
-    parser.addParseListener(semanticErrorListener);
-    parser.formula();
-
-    const allErrors = [
-      ...syntaxErrorListener.getErrors(),
-      ...semanticErrorListener.getErrors(),
-    ];
-
-    return {
-      success: allErrors.length === 0,
-      errors: allErrors,
-    };
-  };
 }

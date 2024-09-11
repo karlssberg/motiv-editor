@@ -1,7 +1,7 @@
-﻿type OperatorTypes = 'and' | 'andalso' | 'or' | 'orelse' | 'not' | 'xor';
-type VariableTypes = 'proposition';
-type PunctuationTypes = 'openParenthesis' | 'closeParenthesis';
-type IgnoredTypes = 'whitespace' | 'newline';
+﻿export type OperatorTypes = 'and' | 'andalso' | 'or' | 'orelse' | 'not' | 'xor';
+export type VariableTypes = 'proposition';
+export type PunctuationTypes = 'openParenthesis' | 'closeParenthesis';
+export type IgnoredTypes = 'whitespace' | 'newline';
 
 export type TokenType =
   | OperatorTypes

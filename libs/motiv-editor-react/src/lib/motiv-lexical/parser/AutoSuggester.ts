@@ -1,5 +1,4 @@
-﻿import { PropositionalLogicParser } from './antlr/PropositionalLogicParser';
-import { Suggestion } from './Suggestion';
+﻿import { Suggestion } from '../../Suggestion';
 import {
   CharStream,
   CommonTokenStream,
@@ -7,9 +6,10 @@ import {
   ParseTree,
   TerminalNode,
 } from 'antlr4ng';
-import { PropositionalLogicLexer } from './antlr/PropositionalLogicLexer';
 import { CandidatesCollection, CodeCompletionCore } from 'antlr4-c3';
-import { Proposition } from 'motiv-editor-react';
+import { Proposition } from '../../Proposition';
+import { PropositionalLogicLexer } from './antlr/PropositionalLogicLexer';
+import { PropositionalLogicParser } from './antlr/PropositionalLogicParser';
 
 const xOrSuggestions: Suggestion[] = [
   {

@@ -1,9 +1,9 @@
 ﻿import { Suggestion } from './Suggestion';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { Signal, useComputed, useSignal } from '@preact/signals-react';
-import FreeTextState from './FreeTextState';
-import { useCallback, useEffect, useMemo } from 'react';
-import AutoSuggester from './AutoSuggester';
+import FreeTextState from './motiv-lexical/states/FreeTextState';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import AutoSuggester from './motiv-lexical/parser/AutoSuggester';
 import { mergeRegister } from '@lexical/utils';
 import {
   $getRoot,
@@ -12,34 +12,14 @@ import {
   COMMAND_PRIORITY_NORMAL,
   SELECTION_CHANGE_COMMAND,
 } from 'lexical';
-import SuggestionsState from './SuggestionsState';
-import { Proposition } from 'motiv-editor-react';
-
-export interface State {
-  readonly type: string;
-  arrowDownHandler(event: KeyboardEvent): boolean;
-  arrowUpHandler(event: KeyboardEvent): boolean;
-  keyDownHandler(event: KeyboardEvent): boolean;
-  enterKeyHandler(event: KeyboardEvent | null): boolean;
-  escapeKeyHandler(event: KeyboardEvent): boolean;
-  arrowLeftHandler(event: KeyboardEvent): boolean;
-  arrowRightHandler(event: KeyboardEvent): boolean;
-  backspaceHandler(event: KeyboardEvent): boolean;
-  deleteHandler(event: KeyboardEvent): boolean;
-  clickHandler(
-    event: MouseEvent,
-    suggestion: Suggestion,
-    selectedIndex: number
-  ): boolean;
-  documentClickHandler(event: Event): void;
-  suggestionVisible: boolean;
-  getSearchText(): string;
-}
+import SuggestionsState from './motiv-lexical/states/SuggestionsState';
+import { Proposition } from './Proposition';
+import { State } from './motiv-lexical';
 
 export interface StateContext {
-  selectedIndex: Signal<number>;
-  suggestions: Signal<Suggestion[]>;
+  setSelectedSuggestion: (suggestion: Suggestion | null) => void;
 }
+
 const nullSuggestions: Suggestion[] = [];
 
 function getSourceCodeCaretPosition(): number | null {
@@ -70,26 +50,31 @@ function getSourceCodeCaretPosition(): number | null {
 
 export function useMotivStates(propositionSuggestions: Proposition[]) {
   const [editor] = useLexicalComposerContext();
-  const selectedIndex = useSignal(0);
+  const [selectedSuggestion, setSelectedSuggestion] =
+    useState<Suggestion | null>(null);
   const autoSuggester = useMemo(
     () => new AutoSuggester(propositionSuggestions),
     [propositionSuggestions]
   );
-  const suggestions = useSignal<Suggestion[]>(nullSuggestions);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>(nullSuggestions);
   const initialFreeTextState = useMemo(
     () =>
       new FreeTextState(editor, setNextState, {
-        selectedIndex,
-        suggestions,
+        setSelectedSuggestion: (suggestion) =>
+          setSelectedSuggestion(suggestion),
       }),
-    [editor]
+    [editor, suggestions]
   );
 
-  const state = useSignal<State>(initialFreeTextState);
+  const [state, setState] = useState<State>(initialFreeTextState);
 
   function setNextState(nextState: State) {
-    state.value = nextState;
+    setState(nextState);
   }
+
+  useEffect(() => {
+    state.setSuggestions(suggestions);
+  }, [state, suggestions]);
 
   const updateSuggestions = useCallback(() => {
     const editorText = editor.getRootElement()?.textContent;
@@ -102,15 +87,14 @@ export function useMotivStates(propositionSuggestions: Proposition[]) {
       }
 
       const searchCriteria =
-        state.value instanceof SuggestionsState
-          ? state.value.getSearchText()
-          : '';
+        state instanceof SuggestionsState ? state.getSearchText() : '';
 
-      suggestions.value = autoSuggester.getSuggestions(
+      const newSuggestions = autoSuggester.getSuggestions(
         editorText ?? '',
         globalOffset,
         searchCriteria
       );
+      setSuggestions(newSuggestions);
     });
   }, [editor, autoSuggester, suggestions]);
 
@@ -131,7 +115,9 @@ export function useMotivStates(propositionSuggestions: Proposition[]) {
 
   return {
     state,
-    selectedIndex,
+    selectedSuggestion,
+    setSelectedSuggestion,
     suggestions,
+    setSuggestions,
   };
 }

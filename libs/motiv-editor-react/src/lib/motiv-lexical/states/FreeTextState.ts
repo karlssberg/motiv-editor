@@ -1,16 +1,14 @@
 ﻿import {
   $createPoint,
   $getSelection,
-  $isElementNode,
   $isRangeSelection,
-  $isTextNode,
   LexicalEditor,
 } from 'lexical';
-import { State, StateContext } from './useMotivStates';
+import { StateContext } from '../../useMotivStates';
 import SuggestionsState from './SuggestionsState';
 import { TextPointType } from 'lexical/LexicalSelection';
-import { $createUnrecognizedNode } from './nodes/UnrecognizedNode';
-import { $isTokenNode } from './nodes/TokenNode';
+import { State } from './State';
+import { Suggestion } from '../../Suggestion';
 
 export default class FreeTextState implements State {
   readonly type = 'FreeTextState';
@@ -20,6 +18,10 @@ export default class FreeTextState implements State {
     private readonly setNextState: (state: State) => void,
     private readonly context: StateContext
   ) {}
+
+  setSuggestions(suggestions: Suggestion[]): void {
+    return;
+  }
 
   getSearchText(): string {
     return '';
@@ -50,7 +52,7 @@ export default class FreeTextState implements State {
 
     if ((isSpecialChar && !isForceSuggestions) || !isSingleChar) return false;
 
-    this.context.selectedIndex.value = 0;
+    this.context.setSelectedSuggestion(null);
 
     setTimeout(
       () =>

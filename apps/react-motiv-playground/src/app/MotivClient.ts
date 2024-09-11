@@ -126,7 +126,7 @@ export class Client {
 
 export class GetRuleResource implements IGetRuleResource {
   compatiblePropositions?: PropositionResource[] | undefined;
-  source?: string | undefined;
+  rule?: string | undefined;
 
   constructor(data?: IGetRuleResource) {
     if (data) {
@@ -144,7 +144,7 @@ export class GetRuleResource implements IGetRuleResource {
         for (let item of _data['compatiblePropositions'])
           this.compatiblePropositions!.push(PropositionResource.fromJS(item));
       }
-      this.source = _data['source'];
+      this.rule = _data['rule'];
     }
   }
 
@@ -162,14 +162,14 @@ export class GetRuleResource implements IGetRuleResource {
       for (let item of this.compatiblePropositions)
         data['compatiblePropositions'].push(item.toJSON());
     }
-    data['source'] = this.source;
+    data['rule'] = this.rule;
     return data;
   }
 }
 
 export interface IGetRuleResource {
   compatiblePropositions?: PropositionResource[] | undefined;
-  source?: string | undefined;
+  rule?: string | undefined;
 }
 
 export enum MotivPrimitive {
@@ -277,7 +277,7 @@ export interface IPropositionResource {
 }
 
 export class PutRuleResource implements IPutRuleResource {
-  source?: string | undefined;
+  rule?: string | undefined;
 
   constructor(data?: IPutRuleResource) {
     if (data) {
@@ -290,7 +290,7 @@ export class PutRuleResource implements IPutRuleResource {
 
   init(_data?: any) {
     if (_data) {
-      this.source = _data['source'];
+      this.rule = _data['rule'];
     }
   }
 
@@ -303,17 +303,17 @@ export class PutRuleResource implements IPutRuleResource {
 
   toJSON(data?: any) {
     data = typeof data === 'object' ? data : {};
-    data['source'] = this.source;
+    data['rule'] = this.rule;
     return data;
   }
 }
 
 export interface IPutRuleResource {
-  source?: string | undefined;
+  rule?: string | undefined;
 }
 
 export class ApiException extends Error {
-  override message: string;
+  message: string;
   status: number;
   response: string;
   headers: { [key: string]: any };

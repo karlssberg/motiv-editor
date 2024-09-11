@@ -1,13 +1,14 @@
 ﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { MotivEditor, ParameterInfo, Proposition } from 'motiv-editor-react';
+import { MotivEditor, ParameterInfo } from 'motiv-editor-react';
 import {
   Client,
   MotivTypeResource,
   PropositionResource,
   PutRuleResource,
 } from './MotivClient';
+import { Proposition } from 'motiv-editor-react';
 
 const motivClient = new Client('https://localhost:7203');
 
@@ -29,16 +30,19 @@ function createProposition(proposition: PropositionResource) {
 }
 
 function ClientMotivEditor() {
-  const [initialSource, setInitialSource] = useState<string>('');
-  const [editedSource, setEditedSource] = useState<string>('');
+  const [initialRule, setInitialRule] = useState<string>('');
+  const [editedRule, setEditedRule] = useState<string>('');
   const [propositions, setPropositions] = useState<Proposition[]>([]);
 
   useEffect(() => {
     const load = async () => {
       const response = await motivClient.ruleGET('custom-rule');
       const compatiblePropositions = response.compatiblePropositions;
-      const source = response?.source;
-      source && setInitialSource(source);
+      const source = response?.rule;
+      if (source) {
+        setInitialRule(source);
+        setEditedRule(source);
+      }
       compatiblePropositions &&
         setPropositions(
           compatiblePropositions.map<Proposition>(
@@ -56,15 +60,15 @@ function ClientMotivEditor() {
   >(async () => {
     await motivClient.rulePUT(
       'custom-rule',
-      new PutRuleResource({ source: editedSource })
+      new PutRuleResource({ rule: editedRule })
     );
-  }, [editedSource]);
+  }, [editedRule]);
 
   const changeHandler = useCallback<(source: string) => void>((source) => {
-    setEditedSource(source);
+    setEditedRule(source);
   }, []);
 
-  if (!initialSource || !propositions) {
+  if (!initialRule || !propositions) {
     return <div>Loading...</div>;
   }
 
@@ -72,10 +76,17 @@ function ClientMotivEditor() {
     <>
       <MotivEditor
         propositions={propositions}
-        source={initialSource}
+        source={initialRule}
         onChange={changeHandler}
       />
-      <button onClick={saveHandler}>Save</button>
+      <div className="pl-1">
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md"
+          onClick={saveHandler}
+        >
+          Save
+        </button>
+      </div>
     </>
   );
 }

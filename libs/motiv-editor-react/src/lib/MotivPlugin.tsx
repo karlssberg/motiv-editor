@@ -9,33 +9,18 @@ import {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { mergeRegister } from '@lexical/utils';
-import {
-  $getRoot,
-  $getSelection,
-  $isRangeSelection,
-  COMMAND_PRIORITY_NORMAL,
-  KEY_ARROW_DOWN_COMMAND,
-  KEY_ARROW_LEFT_COMMAND,
-  KEY_ARROW_RIGHT_COMMAND,
-  KEY_ARROW_UP_COMMAND,
-  KEY_BACKSPACE_COMMAND,
-  KEY_DELETE_COMMAND,
-  KEY_DOWN_COMMAND,
-  KEY_ENTER_COMMAND,
-  KEY_ESCAPE_COMMAND,
-} from 'lexical';
+import { $getSelection, $isRangeSelection } from 'lexical';
 import classnames from 'classnames';
 import type { Suggestion } from './Suggestion';
 import { useMotivStates } from './useMotivStates';
-import { Signal } from '@preact/signals-react';
 import {
   computePosition,
   ComputePositionConfig,
   ComputePositionReturn,
 } from '@floating-ui/react';
 import { escapeRegExp } from './escapeRegExp';
-import { Proposition } from './MotivEditor';
+import { Proposition } from './Proposition';
+import { registerMotivCommands } from './motiv-lexical';
 
 interface MotivPluginProps {
   propositions: Proposition[];
@@ -65,7 +50,8 @@ export function MotivPlugin({
   >();
   const dropdownRef = useRef(null);
   const [isBrowser, setIsBrowser] = useState(false);
-  const { state, selectedIndex, suggestions } = useMotivStates(propositions);
+  const { state, selectedSuggestion, suggestions } =
+    useMotivStates(propositions);
 
   useEffect(
     () =>
@@ -75,154 +61,101 @@ export function MotivPlugin({
     [editor]
   );
 
-  useEffect(
-    () =>
-      state.subscribe((nextState) => {
-        if (nextState.suggestionVisible) {
-          updateDropdownPosition();
-        }
-      }),
-    [editor, state]
-  );
+  useEffect(() => {
+    if (state.suggestionVisible) {
+      updateDropdownPosition();
+    }
+  }, [editor, state]);
 
-  useEffect(
-    () =>
-      mergeRegister(
-        editor.registerCommand(
-          KEY_ARROW_DOWN_COMMAND,
-          (event) => state.value.arrowDownHandler(event),
-          COMMAND_PRIORITY_NORMAL
-        ),
-        editor.registerCommand(
-          KEY_ARROW_UP_COMMAND,
-          (event) => state.value.arrowUpHandler(event),
-          COMMAND_PRIORITY_NORMAL
-        ),
-        editor.registerCommand(
-          KEY_DOWN_COMMAND,
-          (event) => state.value.keyDownHandler(event),
-          COMMAND_PRIORITY_NORMAL
-        ),
-        editor.registerCommand(
-          KEY_ENTER_COMMAND,
-          (event) => state.value.enterKeyHandler(event),
-          COMMAND_PRIORITY_NORMAL
-        ),
-        editor.registerCommand(
-          KEY_ESCAPE_COMMAND,
-          (event) => state.value.escapeKeyHandler(event),
-          COMMAND_PRIORITY_NORMAL
-        ),
-        editor.registerCommand(
-          KEY_ARROW_LEFT_COMMAND,
-          (event) => state.value.arrowLeftHandler(event),
-          COMMAND_PRIORITY_NORMAL
-        ),
-        editor.registerCommand(
-          KEY_ARROW_RIGHT_COMMAND,
-          (event) => state.value.arrowRightHandler(event),
-          COMMAND_PRIORITY_NORMAL
-        ),
-        editor.registerCommand(
-          KEY_BACKSPACE_COMMAND,
-          (event) => state.value.backspaceHandler(event),
-          COMMAND_PRIORITY_NORMAL
-        ),
-        editor.registerCommand(
-          KEY_DELETE_COMMAND,
-          (event) => state.value.deleteHandler(event),
-          COMMAND_PRIORITY_NORMAL
-        )
-      ),
-    [editor, state]
-  );
+  useEffect(() => registerMotivCommands(editor, state), [editor, state]);
 
   useEffect(() => {
     const listener = (event: Event) => {
-      state.value.documentClickHandler(event);
+      state.documentClickHandler(event);
     };
     document.addEventListener('click', listener);
     return () => document.removeEventListener('click', listener);
   }, [state]);
 
   const updateDropdownPosition = useCallback(() => {
-    const selection = $getSelection();
-    if ($isRangeSelection(selection) && selection.isCollapsed()) {
-      setTimeout(async () => {
-        const domSelection = getSelection();
-        const domRange =
-          domSelection?.rangeCount !== 0 && domSelection?.getRangeAt(0);
+    editor.read(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection) && selection.isCollapsed()) {
+        setTimeout(async () => {
+          const domSelection = getSelection();
+          const domRange =
+            domSelection?.rangeCount !== 0 && domSelection?.getRangeAt(0);
 
-        if (!domRange || !dropdownRef.current)
-          return setDropdownPosition(undefined);
+          if (!domRange || !dropdownRef.current)
+            return setDropdownPosition(undefined);
 
-        try {
-          let pos = await computePosition(
-            domRange,
-            dropdownRef.current,
-            computePositionOptions
-          );
-          if (!isValidPosition(pos) && defaultPositionRef.current) {
-            pos = await computePosition(
-              defaultPositionRef.current,
+          try {
+            let pos = await computePosition(
+              domRange,
               dropdownRef.current,
               computePositionOptions
             );
+            if (!isValidPosition(pos) && defaultPositionRef.current) {
+              pos = await computePosition(
+                defaultPositionRef.current,
+                dropdownRef.current,
+                computePositionOptions
+              );
+            }
+            setDropdownPosition({ left: pos.x, top: pos.y });
+          } catch (e) {
+            setDropdownPosition(undefined);
           }
-          setDropdownPosition({ left: pos.x, top: pos.y });
-        } catch (e) {
-          setDropdownPosition(undefined);
-        }
 
-        function isValidPosition(pos: ComputePositionReturn): boolean {
-          if (!pos) return false;
+          function isValidPosition(pos: ComputePositionReturn): boolean {
+            if (!pos) return false;
 
-          return !!pos.x || !!pos.y;
-        }
-      }, 0);
-    }
-  }, [state.value.suggestionVisible]);
+            return !!pos.x || !!pos.y;
+          }
+        }, 0);
+      }
+    });
+  }, [state.suggestionVisible]);
 
   useEffect(
     () =>
       editor.registerUpdateListener(() =>
         editor.read(() => {
-          if (state.value.suggestionVisible) {
+          if (state.suggestionVisible) {
             updateDropdownPosition();
           }
         })
       ),
-    [editor, state.value.suggestionVisible]
+    [editor, state.suggestionVisible]
   );
 
   useEffect(() => setIsBrowser(true), []);
 
   const onClick = useCallback(
-    (event: MouseEvent, item: Suggestion, index: number) =>
-      editor.update(() =>
-        state.value.clickHandler(event.nativeEvent, item, index)
-      ),
-    [editor, state.value]
+    (event: MouseEvent, item: Suggestion) =>
+      editor.update(() => state.clickHandler(event.nativeEvent, item)),
+    [editor, state]
   );
 
   const renderedSuggestions = useMemo(() => {
-    const searchText = state.value.getSearchText();
+    const searchText = state.getSearchText();
     const escapedSearchCriteria = escapeRegExp(searchText);
     const searchRegExp = new RegExp(`(${escapedSearchCriteria})`, 'gi');
 
-    return suggestions.value.map((suggestion, index) => {
+    return suggestions.map((suggestion, index) => {
       const textParts = suggestion.value.split(searchRegExp);
       return (
         <li
           className={classnames(
             {
-              'bg-blue-200 text-blue-900': index == selectedIndex.value,
+              'bg-blue-200 text-blue-900':
+                suggestion.value === selectedSuggestion?.value,
             },
             'hover:bg-blue-200 hover:text-blue-900 cursor-pointer p-1'
           )}
           key={suggestion.value}
           onKeyDown={(event) => event.preventDefault()}
-          onClick={(event) => onClick(event, suggestion, index)}
+          onClick={(event) => onClick(event, suggestion)}
         >
           {textParts.map((part, index) => {
             const upperCasePart = part.toUpperCase();
@@ -241,7 +174,7 @@ export function MotivPlugin({
         </li>
       );
     });
-  }, [onClick, selectedIndex.value, suggestions.value]);
+  }, [onClick, selectedSuggestion, suggestions]);
 
   return (
     isBrowser &&
@@ -254,7 +187,7 @@ export function MotivPlugin({
           left: `${dropdownPosition?.left ?? 0}px`,
         }}
       >
-        {state.value.suggestionVisible && dropdownPosition?.top && (
+        {state.suggestionVisible && dropdownPosition?.top && (
           <ul>{...renderedSuggestions}</ul>
         )}
       </div>,
@@ -262,5 +195,3 @@ export function MotivPlugin({
     )
   );
 }
-
-export default MotivPlugin;
