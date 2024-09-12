@@ -7,7 +7,7 @@
   $createPoint,
   RangeSelection,
 } from 'lexical';
-import { Suggestion } from '../../Suggestion';
+import { Suggestion } from '../parser';
 import FreeTextState from './FreeTextState';
 import { StateContext } from '../../useMotivStates';
 import { $createUnrecognizedNode, State } from '../index';
@@ -18,6 +18,7 @@ export default class SuggestionsState implements State {
   private searchText = '';
   private suggestions: Suggestion[] = [];
   private selectedSuggestion: Suggestion | null = null;
+  private suggestionsRemainVisibleAfterTokens = ['(', '!'];
 
   constructor(
     private readonly editor: LexicalEditor,
@@ -29,7 +30,18 @@ export default class SuggestionsState implements State {
   }
 
   setSuggestions(suggestions: Suggestion[]): void {
-    if (this.suggestions !== suggestions) {
+    if (suggestions.length === 0) {
+      this.setFreeTextState();
+      return;
+    }
+    if (this.selectedSuggestion == null) {
+      this.setSelectedSuggestion(suggestions[0]);
+    }
+    if (
+      !suggestions.some(
+        (suggestion) => suggestion.value === this.selectedSuggestion?.value
+      )
+    ) {
       this.selectedSuggestion = null;
     }
     this.suggestions = suggestions;
@@ -41,6 +53,7 @@ export default class SuggestionsState implements State {
     this.setFreeTextState();
     return false;
   }
+
   arrowRightHandler(event: KeyboardEvent): boolean {
     this.context.setSelectedSuggestion(null);
 
@@ -109,8 +122,12 @@ export default class SuggestionsState implements State {
 
   enterKeyHandler(event: KeyboardEvent | null): boolean {
     event?.preventDefault();
-    const context = this.context;
-    return this.handleSuggestionSelection(this.selectedSuggestion!);
+    if (!this.selectedSuggestion) {
+      this.setFreeTextState();
+      return true;
+    }
+
+    return this.handleSuggestionSelection(this.selectedSuggestion);
   }
 
   escapeKeyHandler(event: KeyboardEvent): boolean {
@@ -152,7 +169,10 @@ export default class SuggestionsState implements State {
 
     this.insertText(selection, suggestion);
 
-    this.setFreeTextState();
+    if (!this.suggestionsRemainVisibleAfterTokens.includes(suggestion.value)) {
+      this.setFreeTextState();
+    }
+
     return true;
   }
 

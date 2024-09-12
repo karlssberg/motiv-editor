@@ -10,8 +10,9 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { $getSelection, $isRangeSelection } from 'lexical';
+import { mergeRegister } from '@lexical/utils';
 import classnames from 'classnames';
-import type { Suggestion } from './Suggestion';
+import { Suggestion, Proposition } from './motiv-lexical';
 import { useMotivStates } from './useMotivStates';
 import {
   computePosition,
@@ -19,9 +20,7 @@ import {
   ComputePositionReturn,
 } from '@floating-ui/react';
 import { escapeRegExp } from './escapeRegExp';
-import { Proposition } from './Proposition';
-import { registerMotivCommands } from './motiv-lexical';
-
+import { registerMotivEditor } from './motiv-lexical/registerMotivEditor';
 interface MotivPluginProps {
   propositions: Proposition[];
   containerRef: RefObject<HTMLElement>;
@@ -53,21 +52,27 @@ export function MotivPlugin({
   const { state, selectedSuggestion, suggestions } =
     useMotivStates(propositions);
 
-  useEffect(
-    () =>
+  useEffect(() => {
+    return mergeRegister(
+      registerMotivEditor(editor, propositions, state),
       editor.registerTextContentListener((text) => {
         onChange && onChange(text);
       }),
-    [editor]
-  );
+      editor.registerUpdateListener(() =>
+        editor.read(() => {
+          if (state.suggestionVisible) {
+            updateDropdownPosition();
+          }
+        })
+      )
+    );
+  }, [editor, propositions, state]);
 
   useEffect(() => {
     if (state.suggestionVisible) {
       updateDropdownPosition();
     }
   }, [editor, state]);
-
-  useEffect(() => registerMotivCommands(editor, state), [editor, state]);
 
   useEffect(() => {
     const listener = (event: Event) => {
@@ -116,18 +121,6 @@ export function MotivPlugin({
       }
     });
   }, [state.suggestionVisible]);
-
-  useEffect(
-    () =>
-      editor.registerUpdateListener(() =>
-        editor.read(() => {
-          if (state.suggestionVisible) {
-            updateDropdownPosition();
-          }
-        })
-      ),
-    [editor, state.suggestionVisible]
-  );
 
   useEffect(() => setIsBrowser(true), []);
 

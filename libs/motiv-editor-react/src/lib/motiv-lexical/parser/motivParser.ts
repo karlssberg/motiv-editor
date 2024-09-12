@@ -13,7 +13,7 @@ import {
   Token,
 } from 'antlr4ng';
 import { PropositionalLogicLexer } from './antlr/PropositionalLogicLexer';
-import { Proposition } from '../../Proposition';
+import { Proposition } from './Proposition';
 
 export interface ErrorInfo {
   line: number;

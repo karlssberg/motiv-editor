@@ -1,9 +1,13 @@
-﻿import { Suggestion } from './Suggestion';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { Signal, useComputed, useSignal } from '@preact/signals-react';
-import FreeTextState from './motiv-lexical/states/FreeTextState';
+﻿import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import AutoSuggester from './motiv-lexical/parser/AutoSuggester';
+import {
+  AutoSuggester,
+  FreeTextState,
+  SuggestionsState,
+  State,
+  Proposition,
+  Suggestion,
+} from './motiv-lexical';
 import { mergeRegister } from '@lexical/utils';
 import {
   $getRoot,
@@ -12,9 +16,6 @@ import {
   COMMAND_PRIORITY_NORMAL,
   SELECTION_CHANGE_COMMAND,
 } from 'lexical';
-import SuggestionsState from './motiv-lexical/states/SuggestionsState';
-import { Proposition } from './Proposition';
-import { State } from './motiv-lexical';
 
 export interface StateContext {
   setSelectedSuggestion: (suggestion: Suggestion | null) => void;
@@ -82,7 +83,9 @@ export function useMotivStates(propositionSuggestions: Proposition[]) {
     editor.getEditorState().read(() => {
       const globalOffset = getSourceCodeCaretPosition();
       if (globalOffset === null) {
-        console.log('Global offset is null');
+        console.log(
+          'Global offset is null, unable to update Motiv editor suggestions dropdown'
+        );
         return;
       }
 

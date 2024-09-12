@@ -8,7 +8,7 @@ import { StateContext } from '../../useMotivStates';
 import SuggestionsState from './SuggestionsState';
 import { TextPointType } from 'lexical/LexicalSelection';
 import { State } from './State';
-import { Suggestion } from '../../Suggestion';
+import { Suggestion } from '../parser';
 
 export default class FreeTextState implements State {
   readonly type = 'FreeTextState';

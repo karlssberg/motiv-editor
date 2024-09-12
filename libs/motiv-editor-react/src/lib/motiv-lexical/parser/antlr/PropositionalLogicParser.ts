@@ -12,16 +12,16 @@ type int = number;
 
 
 export class PropositionalLogicParser extends antlr.Parser {
-    public static readonly PROPOSITION = 1;
-    public static readonly PARAMETER = 2;
+    public static readonly LPAREN = 1;
+    public static readonly RPAREN = 2;
     public static readonly AND_ALSO = 3;
     public static readonly OR_ELSE = 4;
     public static readonly AND = 5;
     public static readonly OR = 6;
     public static readonly NOT = 7;
     public static readonly XOR = 8;
-    public static readonly LPAREN = 9;
-    public static readonly RPAREN = 10;
+    public static readonly PROPOSITION = 9;
+    public static readonly PARAMETER = 10;
     public static readonly IDENTIFIER_SEGMENT_START = 11;
     public static readonly IDENTIFIER_SEGMENT = 12;
     public static readonly WS = 13;
@@ -33,21 +33,30 @@ export class PropositionalLogicParser extends antlr.Parser {
     public static readonly RULE_xorExpression = 5;
     public static readonly RULE_andExpression = 6;
     public static readonly RULE_notExpression = 7;
-    public static readonly RULE_proposition = 8;
+    public static readonly RULE_andOperator = 8;
+    public static readonly RULE_orOperator = 9;
+    public static readonly RULE_xorOperator = 10;
+    public static readonly RULE_notOperator = 11;
+    public static readonly RULE_conditionalAndOperator = 12;
+    public static readonly RULE_conditionalOrOperator = 13;
+    public static readonly RULE_leftParenthesis = 14;
+    public static readonly RULE_rightParenthesis = 15;
+    public static readonly RULE_proposition = 16;
 
     public static readonly literalNames = [
-        null, null, null, "'&&'", "'||'", "'&'", "'|'", "'!'", "'^'", "'('", 
-        "')'"
+        null, "'('", "')'", "'&&'", "'||'", "'&'", "'|'", "'!'", "'^'"
     ];
 
     public static readonly symbolicNames = [
-        null, "PROPOSITION", "PARAMETER", "AND_ALSO", "OR_ELSE", "AND", 
-        "OR", "NOT", "XOR", "LPAREN", "RPAREN", "IDENTIFIER_SEGMENT_START", 
-        "IDENTIFIER_SEGMENT", "WS"
+        null, "LPAREN", "RPAREN", "AND_ALSO", "OR_ELSE", "AND", "OR", "NOT", 
+        "XOR", "PROPOSITION", "PARAMETER", "IDENTIFIER_SEGMENT_START", "IDENTIFIER_SEGMENT", 
+        "WS"
     ];
     public static readonly ruleNames = [
         "formula", "expression", "conditionalOrExpression", "conditionalAndExpression", 
         "orExpression", "xorExpression", "andExpression", "notExpression", 
+        "andOperator", "orOperator", "xorOperator", "notOperator", "conditionalAndOperator", 
+        "conditionalOrOperator", "leftParenthesis", "rightParenthesis", 
         "proposition",
     ];
 
@@ -71,9 +80,9 @@ export class PropositionalLogicParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 18;
+            this.state = 34;
             this.expression();
-            this.state = 19;
+            this.state = 35;
             this.match(PropositionalLogicParser.EOF);
             }
         }
@@ -96,7 +105,7 @@ export class PropositionalLogicParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 21;
+            this.state = 37;
             this.conditionalOrExpression();
             }
         }
@@ -120,21 +129,21 @@ export class PropositionalLogicParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 23;
+            this.state = 39;
             this.conditionalAndExpression();
-            this.state = 28;
+            this.state = 45;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
             while (_la === 4) {
                 {
                 {
-                this.state = 24;
-                this.match(PropositionalLogicParser.OR_ELSE);
-                this.state = 25;
+                this.state = 40;
+                this.conditionalOrOperator();
+                this.state = 41;
                 this.conditionalAndExpression();
                 }
                 }
-                this.state = 30;
+                this.state = 47;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
             }
@@ -160,21 +169,21 @@ export class PropositionalLogicParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 31;
+            this.state = 48;
             this.orExpression();
-            this.state = 36;
+            this.state = 54;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
             while (_la === 3) {
                 {
                 {
-                this.state = 32;
-                this.match(PropositionalLogicParser.AND_ALSO);
-                this.state = 33;
+                this.state = 49;
+                this.conditionalAndOperator();
+                this.state = 50;
                 this.orExpression();
                 }
                 }
-                this.state = 38;
+                this.state = 56;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
             }
@@ -200,21 +209,21 @@ export class PropositionalLogicParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 39;
+            this.state = 57;
             this.xorExpression();
-            this.state = 44;
+            this.state = 63;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
             while (_la === 6) {
                 {
                 {
-                this.state = 40;
-                this.match(PropositionalLogicParser.OR);
-                this.state = 41;
+                this.state = 58;
+                this.orOperator();
+                this.state = 59;
                 this.xorExpression();
                 }
                 }
-                this.state = 46;
+                this.state = 65;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
             }
@@ -240,21 +249,21 @@ export class PropositionalLogicParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 47;
+            this.state = 66;
             this.andExpression();
-            this.state = 52;
+            this.state = 72;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
             while (_la === 8) {
                 {
                 {
-                this.state = 48;
-                this.match(PropositionalLogicParser.XOR);
-                this.state = 49;
+                this.state = 67;
+                this.xorOperator();
+                this.state = 68;
                 this.andExpression();
                 }
                 }
-                this.state = 54;
+                this.state = 74;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
             }
@@ -280,21 +289,21 @@ export class PropositionalLogicParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 55;
+            this.state = 75;
             this.notExpression();
-            this.state = 60;
+            this.state = 81;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
             while (_la === 5) {
                 {
                 {
-                this.state = 56;
-                this.match(PropositionalLogicParser.AND);
-                this.state = 57;
+                this.state = 76;
+                this.andOperator();
+                this.state = 77;
                 this.notExpression();
                 }
                 }
-                this.state = 62;
+                this.state = 83;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
             }
@@ -317,33 +326,33 @@ export class PropositionalLogicParser extends antlr.Parser {
         let localContext = new NotExpressionContext(this.context, this.state);
         this.enterRule(localContext, 14, PropositionalLogicParser.RULE_notExpression);
         try {
-            this.state = 70;
+            this.state = 92;
             this.errorHandler.sync(this);
             switch (this.tokenStream.LA(1)) {
-            case PropositionalLogicParser.NOT:
+            case PropositionalLogicParser.LPAREN:
                 this.enterOuterAlt(localContext, 1);
                 {
-                this.state = 63;
-                this.match(PropositionalLogicParser.NOT);
-                this.state = 64;
-                this.notExpression();
+                this.state = 84;
+                this.leftParenthesis();
+                this.state = 85;
+                this.conditionalOrExpression();
+                this.state = 86;
+                this.rightParenthesis();
                 }
                 break;
-            case PropositionalLogicParser.LPAREN:
+            case PropositionalLogicParser.NOT:
                 this.enterOuterAlt(localContext, 2);
                 {
-                this.state = 65;
-                this.match(PropositionalLogicParser.LPAREN);
-                this.state = 66;
-                this.expression();
-                this.state = 67;
-                this.match(PropositionalLogicParser.RPAREN);
+                this.state = 88;
+                this.notOperator();
+                this.state = 89;
+                this.notExpression();
                 }
                 break;
             case PropositionalLogicParser.PROPOSITION:
                 this.enterOuterAlt(localContext, 3);
                 {
-                this.state = 69;
+                this.state = 91;
                 this.proposition();
                 }
                 break;
@@ -364,13 +373,197 @@ export class PropositionalLogicParser extends antlr.Parser {
         }
         return localContext;
     }
-    public proposition(): PropositionContext {
-        let localContext = new PropositionContext(this.context, this.state);
-        this.enterRule(localContext, 16, PropositionalLogicParser.RULE_proposition);
+    public andOperator(): AndOperatorContext {
+        let localContext = new AndOperatorContext(this.context, this.state);
+        this.enterRule(localContext, 16, PropositionalLogicParser.RULE_andOperator);
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 72;
+            this.state = 94;
+            this.match(PropositionalLogicParser.AND);
+            }
+        }
+        catch (re) {
+            if (re instanceof antlr.RecognitionException) {
+                this.errorHandler.reportError(this, re);
+                this.errorHandler.recover(this, re);
+            } else {
+                throw re;
+            }
+        }
+        finally {
+            this.exitRule();
+        }
+        return localContext;
+    }
+    public orOperator(): OrOperatorContext {
+        let localContext = new OrOperatorContext(this.context, this.state);
+        this.enterRule(localContext, 18, PropositionalLogicParser.RULE_orOperator);
+        try {
+            this.enterOuterAlt(localContext, 1);
+            {
+            this.state = 96;
+            this.match(PropositionalLogicParser.OR);
+            }
+        }
+        catch (re) {
+            if (re instanceof antlr.RecognitionException) {
+                this.errorHandler.reportError(this, re);
+                this.errorHandler.recover(this, re);
+            } else {
+                throw re;
+            }
+        }
+        finally {
+            this.exitRule();
+        }
+        return localContext;
+    }
+    public xorOperator(): XorOperatorContext {
+        let localContext = new XorOperatorContext(this.context, this.state);
+        this.enterRule(localContext, 20, PropositionalLogicParser.RULE_xorOperator);
+        try {
+            this.enterOuterAlt(localContext, 1);
+            {
+            this.state = 98;
+            this.match(PropositionalLogicParser.XOR);
+            }
+        }
+        catch (re) {
+            if (re instanceof antlr.RecognitionException) {
+                this.errorHandler.reportError(this, re);
+                this.errorHandler.recover(this, re);
+            } else {
+                throw re;
+            }
+        }
+        finally {
+            this.exitRule();
+        }
+        return localContext;
+    }
+    public notOperator(): NotOperatorContext {
+        let localContext = new NotOperatorContext(this.context, this.state);
+        this.enterRule(localContext, 22, PropositionalLogicParser.RULE_notOperator);
+        try {
+            this.enterOuterAlt(localContext, 1);
+            {
+            this.state = 100;
+            this.match(PropositionalLogicParser.NOT);
+            }
+        }
+        catch (re) {
+            if (re instanceof antlr.RecognitionException) {
+                this.errorHandler.reportError(this, re);
+                this.errorHandler.recover(this, re);
+            } else {
+                throw re;
+            }
+        }
+        finally {
+            this.exitRule();
+        }
+        return localContext;
+    }
+    public conditionalAndOperator(): ConditionalAndOperatorContext {
+        let localContext = new ConditionalAndOperatorContext(this.context, this.state);
+        this.enterRule(localContext, 24, PropositionalLogicParser.RULE_conditionalAndOperator);
+        try {
+            this.enterOuterAlt(localContext, 1);
+            {
+            this.state = 102;
+            this.match(PropositionalLogicParser.AND_ALSO);
+            }
+        }
+        catch (re) {
+            if (re instanceof antlr.RecognitionException) {
+                this.errorHandler.reportError(this, re);
+                this.errorHandler.recover(this, re);
+            } else {
+                throw re;
+            }
+        }
+        finally {
+            this.exitRule();
+        }
+        return localContext;
+    }
+    public conditionalOrOperator(): ConditionalOrOperatorContext {
+        let localContext = new ConditionalOrOperatorContext(this.context, this.state);
+        this.enterRule(localContext, 26, PropositionalLogicParser.RULE_conditionalOrOperator);
+        try {
+            this.enterOuterAlt(localContext, 1);
+            {
+            this.state = 104;
+            this.match(PropositionalLogicParser.OR_ELSE);
+            }
+        }
+        catch (re) {
+            if (re instanceof antlr.RecognitionException) {
+                this.errorHandler.reportError(this, re);
+                this.errorHandler.recover(this, re);
+            } else {
+                throw re;
+            }
+        }
+        finally {
+            this.exitRule();
+        }
+        return localContext;
+    }
+    public leftParenthesis(): LeftParenthesisContext {
+        let localContext = new LeftParenthesisContext(this.context, this.state);
+        this.enterRule(localContext, 28, PropositionalLogicParser.RULE_leftParenthesis);
+        try {
+            this.enterOuterAlt(localContext, 1);
+            {
+            this.state = 106;
+            this.match(PropositionalLogicParser.LPAREN);
+            }
+        }
+        catch (re) {
+            if (re instanceof antlr.RecognitionException) {
+                this.errorHandler.reportError(this, re);
+                this.errorHandler.recover(this, re);
+            } else {
+                throw re;
+            }
+        }
+        finally {
+            this.exitRule();
+        }
+        return localContext;
+    }
+    public rightParenthesis(): RightParenthesisContext {
+        let localContext = new RightParenthesisContext(this.context, this.state);
+        this.enterRule(localContext, 30, PropositionalLogicParser.RULE_rightParenthesis);
+        try {
+            this.enterOuterAlt(localContext, 1);
+            {
+            this.state = 108;
+            this.match(PropositionalLogicParser.RPAREN);
+            }
+        }
+        catch (re) {
+            if (re instanceof antlr.RecognitionException) {
+                this.errorHandler.reportError(this, re);
+                this.errorHandler.recover(this, re);
+            } else {
+                throw re;
+            }
+        }
+        finally {
+            this.exitRule();
+        }
+        return localContext;
+    }
+    public proposition(): PropositionContext {
+        let localContext = new PropositionContext(this.context, this.state);
+        this.enterRule(localContext, 32, PropositionalLogicParser.RULE_proposition);
+        try {
+            this.enterOuterAlt(localContext, 1);
+            {
+            this.state = 110;
             this.match(PropositionalLogicParser.PROPOSITION);
             }
         }
@@ -389,28 +582,39 @@ export class PropositionalLogicParser extends antlr.Parser {
     }
 
     public static readonly _serializedATN: number[] = [
-        4,1,13,75,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
-        6,2,7,7,7,2,8,7,8,1,0,1,0,1,0,1,1,1,1,1,2,1,2,1,2,5,2,27,8,2,10,
-        2,12,2,30,9,2,1,3,1,3,1,3,5,3,35,8,3,10,3,12,3,38,9,3,1,4,1,4,1,
-        4,5,4,43,8,4,10,4,12,4,46,9,4,1,5,1,5,1,5,5,5,51,8,5,10,5,12,5,54,
-        9,5,1,6,1,6,1,6,5,6,59,8,6,10,6,12,6,62,9,6,1,7,1,7,1,7,1,7,1,7,
-        1,7,1,7,3,7,71,8,7,1,8,1,8,1,8,0,0,9,0,2,4,6,8,10,12,14,16,0,0,72,
-        0,18,1,0,0,0,2,21,1,0,0,0,4,23,1,0,0,0,6,31,1,0,0,0,8,39,1,0,0,0,
-        10,47,1,0,0,0,12,55,1,0,0,0,14,70,1,0,0,0,16,72,1,0,0,0,18,19,3,
-        2,1,0,19,20,5,0,0,1,20,1,1,0,0,0,21,22,3,4,2,0,22,3,1,0,0,0,23,28,
-        3,6,3,0,24,25,5,4,0,0,25,27,3,6,3,0,26,24,1,0,0,0,27,30,1,0,0,0,
-        28,26,1,0,0,0,28,29,1,0,0,0,29,5,1,0,0,0,30,28,1,0,0,0,31,36,3,8,
-        4,0,32,33,5,3,0,0,33,35,3,8,4,0,34,32,1,0,0,0,35,38,1,0,0,0,36,34,
-        1,0,0,0,36,37,1,0,0,0,37,7,1,0,0,0,38,36,1,0,0,0,39,44,3,10,5,0,
-        40,41,5,6,0,0,41,43,3,10,5,0,42,40,1,0,0,0,43,46,1,0,0,0,44,42,1,
-        0,0,0,44,45,1,0,0,0,45,9,1,0,0,0,46,44,1,0,0,0,47,52,3,12,6,0,48,
-        49,5,8,0,0,49,51,3,12,6,0,50,48,1,0,0,0,51,54,1,0,0,0,52,50,1,0,
-        0,0,52,53,1,0,0,0,53,11,1,0,0,0,54,52,1,0,0,0,55,60,3,14,7,0,56,
-        57,5,5,0,0,57,59,3,14,7,0,58,56,1,0,0,0,59,62,1,0,0,0,60,58,1,0,
-        0,0,60,61,1,0,0,0,61,13,1,0,0,0,62,60,1,0,0,0,63,64,5,7,0,0,64,71,
-        3,14,7,0,65,66,5,9,0,0,66,67,3,2,1,0,67,68,5,10,0,0,68,71,1,0,0,
-        0,69,71,3,16,8,0,70,63,1,0,0,0,70,65,1,0,0,0,70,69,1,0,0,0,71,15,
-        1,0,0,0,72,73,5,1,0,0,73,17,1,0,0,0,6,28,36,44,52,60,70
+        4,1,13,113,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
+        2,14,7,14,2,15,7,15,2,16,7,16,1,0,1,0,1,0,1,1,1,1,1,2,1,2,1,2,1,
+        2,5,2,44,8,2,10,2,12,2,47,9,2,1,3,1,3,1,3,1,3,5,3,53,8,3,10,3,12,
+        3,56,9,3,1,4,1,4,1,4,1,4,5,4,62,8,4,10,4,12,4,65,9,4,1,5,1,5,1,5,
+        1,5,5,5,71,8,5,10,5,12,5,74,9,5,1,6,1,6,1,6,1,6,5,6,80,8,6,10,6,
+        12,6,83,9,6,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,3,7,93,8,7,1,8,1,8,1,
+        9,1,9,1,10,1,10,1,11,1,11,1,12,1,12,1,13,1,13,1,14,1,14,1,15,1,15,
+        1,16,1,16,1,16,0,0,17,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,
+        32,0,0,102,0,34,1,0,0,0,2,37,1,0,0,0,4,39,1,0,0,0,6,48,1,0,0,0,8,
+        57,1,0,0,0,10,66,1,0,0,0,12,75,1,0,0,0,14,92,1,0,0,0,16,94,1,0,0,
+        0,18,96,1,0,0,0,20,98,1,0,0,0,22,100,1,0,0,0,24,102,1,0,0,0,26,104,
+        1,0,0,0,28,106,1,0,0,0,30,108,1,0,0,0,32,110,1,0,0,0,34,35,3,2,1,
+        0,35,36,5,0,0,1,36,1,1,0,0,0,37,38,3,4,2,0,38,3,1,0,0,0,39,45,3,
+        6,3,0,40,41,3,26,13,0,41,42,3,6,3,0,42,44,1,0,0,0,43,40,1,0,0,0,
+        44,47,1,0,0,0,45,43,1,0,0,0,45,46,1,0,0,0,46,5,1,0,0,0,47,45,1,0,
+        0,0,48,54,3,8,4,0,49,50,3,24,12,0,50,51,3,8,4,0,51,53,1,0,0,0,52,
+        49,1,0,0,0,53,56,1,0,0,0,54,52,1,0,0,0,54,55,1,0,0,0,55,7,1,0,0,
+        0,56,54,1,0,0,0,57,63,3,10,5,0,58,59,3,18,9,0,59,60,3,10,5,0,60,
+        62,1,0,0,0,61,58,1,0,0,0,62,65,1,0,0,0,63,61,1,0,0,0,63,64,1,0,0,
+        0,64,9,1,0,0,0,65,63,1,0,0,0,66,72,3,12,6,0,67,68,3,20,10,0,68,69,
+        3,12,6,0,69,71,1,0,0,0,70,67,1,0,0,0,71,74,1,0,0,0,72,70,1,0,0,0,
+        72,73,1,0,0,0,73,11,1,0,0,0,74,72,1,0,0,0,75,81,3,14,7,0,76,77,3,
+        16,8,0,77,78,3,14,7,0,78,80,1,0,0,0,79,76,1,0,0,0,80,83,1,0,0,0,
+        81,79,1,0,0,0,81,82,1,0,0,0,82,13,1,0,0,0,83,81,1,0,0,0,84,85,3,
+        28,14,0,85,86,3,4,2,0,86,87,3,30,15,0,87,93,1,0,0,0,88,89,3,22,11,
+        0,89,90,3,14,7,0,90,93,1,0,0,0,91,93,3,32,16,0,92,84,1,0,0,0,92,
+        88,1,0,0,0,92,91,1,0,0,0,93,15,1,0,0,0,94,95,5,5,0,0,95,17,1,0,0,
+        0,96,97,5,6,0,0,97,19,1,0,0,0,98,99,5,8,0,0,99,21,1,0,0,0,100,101,
+        5,7,0,0,101,23,1,0,0,0,102,103,5,3,0,0,103,25,1,0,0,0,104,105,5,
+        4,0,0,105,27,1,0,0,0,106,107,5,1,0,0,107,29,1,0,0,0,108,109,5,2,
+        0,0,109,31,1,0,0,0,110,111,5,9,0,0,111,33,1,0,0,0,6,45,54,63,72,
+        81,92
     ];
 
     private static __ATN: antlr.ATN;
@@ -508,14 +712,14 @@ export class ConditionalOrExpressionContext extends antlr.ParserRuleContext {
 
         return this.getRuleContext(i, ConditionalAndExpressionContext);
     }
-    public OR_ELSE(): antlr.TerminalNode[];
-    public OR_ELSE(i: number): antlr.TerminalNode | null;
-    public OR_ELSE(i?: number): antlr.TerminalNode | null | antlr.TerminalNode[] {
-    	if (i === undefined) {
-    		return this.getTokens(PropositionalLogicParser.OR_ELSE);
-    	} else {
-    		return this.getToken(PropositionalLogicParser.OR_ELSE, i);
-    	}
+    public conditionalOrOperator(): ConditionalOrOperatorContext[];
+    public conditionalOrOperator(i: number): ConditionalOrOperatorContext | null;
+    public conditionalOrOperator(i?: number): ConditionalOrOperatorContext[] | ConditionalOrOperatorContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(ConditionalOrOperatorContext);
+        }
+
+        return this.getRuleContext(i, ConditionalOrOperatorContext);
     }
     public override get ruleIndex(): number {
         return PropositionalLogicParser.RULE_conditionalOrExpression;
@@ -553,14 +757,14 @@ export class ConditionalAndExpressionContext extends antlr.ParserRuleContext {
 
         return this.getRuleContext(i, OrExpressionContext);
     }
-    public AND_ALSO(): antlr.TerminalNode[];
-    public AND_ALSO(i: number): antlr.TerminalNode | null;
-    public AND_ALSO(i?: number): antlr.TerminalNode | null | antlr.TerminalNode[] {
-    	if (i === undefined) {
-    		return this.getTokens(PropositionalLogicParser.AND_ALSO);
-    	} else {
-    		return this.getToken(PropositionalLogicParser.AND_ALSO, i);
-    	}
+    public conditionalAndOperator(): ConditionalAndOperatorContext[];
+    public conditionalAndOperator(i: number): ConditionalAndOperatorContext | null;
+    public conditionalAndOperator(i?: number): ConditionalAndOperatorContext[] | ConditionalAndOperatorContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(ConditionalAndOperatorContext);
+        }
+
+        return this.getRuleContext(i, ConditionalAndOperatorContext);
     }
     public override get ruleIndex(): number {
         return PropositionalLogicParser.RULE_conditionalAndExpression;
@@ -598,14 +802,14 @@ export class OrExpressionContext extends antlr.ParserRuleContext {
 
         return this.getRuleContext(i, XorExpressionContext);
     }
-    public OR(): antlr.TerminalNode[];
-    public OR(i: number): antlr.TerminalNode | null;
-    public OR(i?: number): antlr.TerminalNode | null | antlr.TerminalNode[] {
-    	if (i === undefined) {
-    		return this.getTokens(PropositionalLogicParser.OR);
-    	} else {
-    		return this.getToken(PropositionalLogicParser.OR, i);
-    	}
+    public orOperator(): OrOperatorContext[];
+    public orOperator(i: number): OrOperatorContext | null;
+    public orOperator(i?: number): OrOperatorContext[] | OrOperatorContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(OrOperatorContext);
+        }
+
+        return this.getRuleContext(i, OrOperatorContext);
     }
     public override get ruleIndex(): number {
         return PropositionalLogicParser.RULE_orExpression;
@@ -643,14 +847,14 @@ export class XorExpressionContext extends antlr.ParserRuleContext {
 
         return this.getRuleContext(i, AndExpressionContext);
     }
-    public XOR(): antlr.TerminalNode[];
-    public XOR(i: number): antlr.TerminalNode | null;
-    public XOR(i?: number): antlr.TerminalNode | null | antlr.TerminalNode[] {
-    	if (i === undefined) {
-    		return this.getTokens(PropositionalLogicParser.XOR);
-    	} else {
-    		return this.getToken(PropositionalLogicParser.XOR, i);
-    	}
+    public xorOperator(): XorOperatorContext[];
+    public xorOperator(i: number): XorOperatorContext | null;
+    public xorOperator(i?: number): XorOperatorContext[] | XorOperatorContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(XorOperatorContext);
+        }
+
+        return this.getRuleContext(i, XorOperatorContext);
     }
     public override get ruleIndex(): number {
         return PropositionalLogicParser.RULE_xorExpression;
@@ -688,14 +892,14 @@ export class AndExpressionContext extends antlr.ParserRuleContext {
 
         return this.getRuleContext(i, NotExpressionContext);
     }
-    public AND(): antlr.TerminalNode[];
-    public AND(i: number): antlr.TerminalNode | null;
-    public AND(i?: number): antlr.TerminalNode | null | antlr.TerminalNode[] {
-    	if (i === undefined) {
-    		return this.getTokens(PropositionalLogicParser.AND);
-    	} else {
-    		return this.getToken(PropositionalLogicParser.AND, i);
-    	}
+    public andOperator(): AndOperatorContext[];
+    public andOperator(i: number): AndOperatorContext | null;
+    public andOperator(i?: number): AndOperatorContext[] | AndOperatorContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(AndOperatorContext);
+        }
+
+        return this.getRuleContext(i, AndOperatorContext);
     }
     public override get ruleIndex(): number {
         return PropositionalLogicParser.RULE_andExpression;
@@ -724,20 +928,20 @@ export class NotExpressionContext extends antlr.ParserRuleContext {
     public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
         super(parent, invokingState);
     }
-    public NOT(): antlr.TerminalNode | null {
-        return this.getToken(PropositionalLogicParser.NOT, 0);
+    public leftParenthesis(): LeftParenthesisContext | null {
+        return this.getRuleContext(0, LeftParenthesisContext);
+    }
+    public conditionalOrExpression(): ConditionalOrExpressionContext | null {
+        return this.getRuleContext(0, ConditionalOrExpressionContext);
+    }
+    public rightParenthesis(): RightParenthesisContext | null {
+        return this.getRuleContext(0, RightParenthesisContext);
+    }
+    public notOperator(): NotOperatorContext | null {
+        return this.getRuleContext(0, NotOperatorContext);
     }
     public notExpression(): NotExpressionContext | null {
         return this.getRuleContext(0, NotExpressionContext);
-    }
-    public LPAREN(): antlr.TerminalNode | null {
-        return this.getToken(PropositionalLogicParser.LPAREN, 0);
-    }
-    public expression(): ExpressionContext | null {
-        return this.getRuleContext(0, ExpressionContext);
-    }
-    public RPAREN(): antlr.TerminalNode | null {
-        return this.getToken(PropositionalLogicParser.RPAREN, 0);
     }
     public proposition(): PropositionContext | null {
         return this.getRuleContext(0, PropositionContext);
@@ -758,6 +962,246 @@ export class NotExpressionContext extends antlr.ParserRuleContext {
     public override accept<Result>(visitor: PropositionalLogicVisitor<Result>): Result | null {
         if (visitor.visitNotExpression) {
             return visitor.visitNotExpression(this);
+        } else {
+            return visitor.visitChildren(this);
+        }
+    }
+}
+
+
+export class AndOperatorContext extends antlr.ParserRuleContext {
+    public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
+        super(parent, invokingState);
+    }
+    public AND(): antlr.TerminalNode {
+        return this.getToken(PropositionalLogicParser.AND, 0)!;
+    }
+    public override get ruleIndex(): number {
+        return PropositionalLogicParser.RULE_andOperator;
+    }
+    public override enterRule(listener: PropositionalLogicListener): void {
+        if(listener.enterAndOperator) {
+             listener.enterAndOperator(this);
+        }
+    }
+    public override exitRule(listener: PropositionalLogicListener): void {
+        if(listener.exitAndOperator) {
+             listener.exitAndOperator(this);
+        }
+    }
+    public override accept<Result>(visitor: PropositionalLogicVisitor<Result>): Result | null {
+        if (visitor.visitAndOperator) {
+            return visitor.visitAndOperator(this);
+        } else {
+            return visitor.visitChildren(this);
+        }
+    }
+}
+
+
+export class OrOperatorContext extends antlr.ParserRuleContext {
+    public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
+        super(parent, invokingState);
+    }
+    public OR(): antlr.TerminalNode {
+        return this.getToken(PropositionalLogicParser.OR, 0)!;
+    }
+    public override get ruleIndex(): number {
+        return PropositionalLogicParser.RULE_orOperator;
+    }
+    public override enterRule(listener: PropositionalLogicListener): void {
+        if(listener.enterOrOperator) {
+             listener.enterOrOperator(this);
+        }
+    }
+    public override exitRule(listener: PropositionalLogicListener): void {
+        if(listener.exitOrOperator) {
+             listener.exitOrOperator(this);
+        }
+    }
+    public override accept<Result>(visitor: PropositionalLogicVisitor<Result>): Result | null {
+        if (visitor.visitOrOperator) {
+            return visitor.visitOrOperator(this);
+        } else {
+            return visitor.visitChildren(this);
+        }
+    }
+}
+
+
+export class XorOperatorContext extends antlr.ParserRuleContext {
+    public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
+        super(parent, invokingState);
+    }
+    public XOR(): antlr.TerminalNode {
+        return this.getToken(PropositionalLogicParser.XOR, 0)!;
+    }
+    public override get ruleIndex(): number {
+        return PropositionalLogicParser.RULE_xorOperator;
+    }
+    public override enterRule(listener: PropositionalLogicListener): void {
+        if(listener.enterXorOperator) {
+             listener.enterXorOperator(this);
+        }
+    }
+    public override exitRule(listener: PropositionalLogicListener): void {
+        if(listener.exitXorOperator) {
+             listener.exitXorOperator(this);
+        }
+    }
+    public override accept<Result>(visitor: PropositionalLogicVisitor<Result>): Result | null {
+        if (visitor.visitXorOperator) {
+            return visitor.visitXorOperator(this);
+        } else {
+            return visitor.visitChildren(this);
+        }
+    }
+}
+
+
+export class NotOperatorContext extends antlr.ParserRuleContext {
+    public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
+        super(parent, invokingState);
+    }
+    public NOT(): antlr.TerminalNode {
+        return this.getToken(PropositionalLogicParser.NOT, 0)!;
+    }
+    public override get ruleIndex(): number {
+        return PropositionalLogicParser.RULE_notOperator;
+    }
+    public override enterRule(listener: PropositionalLogicListener): void {
+        if(listener.enterNotOperator) {
+             listener.enterNotOperator(this);
+        }
+    }
+    public override exitRule(listener: PropositionalLogicListener): void {
+        if(listener.exitNotOperator) {
+             listener.exitNotOperator(this);
+        }
+    }
+    public override accept<Result>(visitor: PropositionalLogicVisitor<Result>): Result | null {
+        if (visitor.visitNotOperator) {
+            return visitor.visitNotOperator(this);
+        } else {
+            return visitor.visitChildren(this);
+        }
+    }
+}
+
+
+export class ConditionalAndOperatorContext extends antlr.ParserRuleContext {
+    public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
+        super(parent, invokingState);
+    }
+    public AND_ALSO(): antlr.TerminalNode {
+        return this.getToken(PropositionalLogicParser.AND_ALSO, 0)!;
+    }
+    public override get ruleIndex(): number {
+        return PropositionalLogicParser.RULE_conditionalAndOperator;
+    }
+    public override enterRule(listener: PropositionalLogicListener): void {
+        if(listener.enterConditionalAndOperator) {
+             listener.enterConditionalAndOperator(this);
+        }
+    }
+    public override exitRule(listener: PropositionalLogicListener): void {
+        if(listener.exitConditionalAndOperator) {
+             listener.exitConditionalAndOperator(this);
+        }
+    }
+    public override accept<Result>(visitor: PropositionalLogicVisitor<Result>): Result | null {
+        if (visitor.visitConditionalAndOperator) {
+            return visitor.visitConditionalAndOperator(this);
+        } else {
+            return visitor.visitChildren(this);
+        }
+    }
+}
+
+
+export class ConditionalOrOperatorContext extends antlr.ParserRuleContext {
+    public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
+        super(parent, invokingState);
+    }
+    public OR_ELSE(): antlr.TerminalNode {
+        return this.getToken(PropositionalLogicParser.OR_ELSE, 0)!;
+    }
+    public override get ruleIndex(): number {
+        return PropositionalLogicParser.RULE_conditionalOrOperator;
+    }
+    public override enterRule(listener: PropositionalLogicListener): void {
+        if(listener.enterConditionalOrOperator) {
+             listener.enterConditionalOrOperator(this);
+        }
+    }
+    public override exitRule(listener: PropositionalLogicListener): void {
+        if(listener.exitConditionalOrOperator) {
+             listener.exitConditionalOrOperator(this);
+        }
+    }
+    public override accept<Result>(visitor: PropositionalLogicVisitor<Result>): Result | null {
+        if (visitor.visitConditionalOrOperator) {
+            return visitor.visitConditionalOrOperator(this);
+        } else {
+            return visitor.visitChildren(this);
+        }
+    }
+}
+
+
+export class LeftParenthesisContext extends antlr.ParserRuleContext {
+    public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
+        super(parent, invokingState);
+    }
+    public LPAREN(): antlr.TerminalNode {
+        return this.getToken(PropositionalLogicParser.LPAREN, 0)!;
+    }
+    public override get ruleIndex(): number {
+        return PropositionalLogicParser.RULE_leftParenthesis;
+    }
+    public override enterRule(listener: PropositionalLogicListener): void {
+        if(listener.enterLeftParenthesis) {
+             listener.enterLeftParenthesis(this);
+        }
+    }
+    public override exitRule(listener: PropositionalLogicListener): void {
+        if(listener.exitLeftParenthesis) {
+             listener.exitLeftParenthesis(this);
+        }
+    }
+    public override accept<Result>(visitor: PropositionalLogicVisitor<Result>): Result | null {
+        if (visitor.visitLeftParenthesis) {
+            return visitor.visitLeftParenthesis(this);
+        } else {
+            return visitor.visitChildren(this);
+        }
+    }
+}
+
+
+export class RightParenthesisContext extends antlr.ParserRuleContext {
+    public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
+        super(parent, invokingState);
+    }
+    public RPAREN(): antlr.TerminalNode {
+        return this.getToken(PropositionalLogicParser.RPAREN, 0)!;
+    }
+    public override get ruleIndex(): number {
+        return PropositionalLogicParser.RULE_rightParenthesis;
+    }
+    public override enterRule(listener: PropositionalLogicListener): void {
+        if(listener.enterRightParenthesis) {
+             listener.enterRightParenthesis(this);
+        }
+    }
+    public override exitRule(listener: PropositionalLogicListener): void {
+        if(listener.exitRightParenthesis) {
+             listener.exitRightParenthesis(this);
+        }
+    }
+    public override accept<Result>(visitor: PropositionalLogicVisitor<Result>): Result | null {
+        if (visitor.visitRightParenthesis) {
+            return visitor.visitRightParenthesis(this);
         } else {
             return visitor.visitChildren(this);
         }

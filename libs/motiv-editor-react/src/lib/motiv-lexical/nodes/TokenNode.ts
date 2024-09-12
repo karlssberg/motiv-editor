@@ -1,16 +1,6 @@
-﻿import {
-  $isTextNode,
-  EditorConfig,
-  LexicalNode,
-  NodeKey,
-  TextNode,
-} from 'lexical';
-import { TokenType } from '../../TokenType';
-import {
-  decorateTextAsInvalid,
-  decorateTextAsValid,
-  decorateTextValidation,
-} from './node-utils';
+﻿import { EditorConfig, LexicalNode, NodeKey, TextNode } from 'lexical';
+import { TokenType } from '../parser';
+import { decorateTextValidation } from './node-utils';
 
 const variableColor = 'indigo';
 const operatorColor = 'chocolate';

@@ -1,7 +1,11 @@
-﻿import { $createTokenNode, $isTokenNode, TokenNode } from '../nodes/TokenNode';
-import { $createWhitespaceNode } from '../nodes/WhitespaceNode';
-import { $createUnrecognizedNode } from '../nodes/UnrecognizedNode';
-import { Proposition } from '../../Proposition';
+﻿import {
+  $createTokenNode,
+  $isTokenNode,
+  TokenNode,
+  $createWhitespaceNode,
+  $createUnrecognizedNode,
+} from '../nodes';
+import { Proposition } from '../parser';
 import { LexicalEditor, LexicalNode } from 'lexical';
 
 export function registerTokenNodeTransformer(

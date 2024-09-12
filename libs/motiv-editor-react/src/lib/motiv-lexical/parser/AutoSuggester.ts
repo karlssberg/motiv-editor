@@ -1,4 +1,4 @@
-﻿import { Suggestion } from '../../Suggestion';
+﻿import { Suggestion } from './Suggestion';
 import {
   CharStream,
   CommonTokenStream,
@@ -7,7 +7,7 @@ import {
   TerminalNode,
 } from 'antlr4ng';
 import { CandidatesCollection, CodeCompletionCore } from 'antlr4-c3';
-import { Proposition } from '../../Proposition';
+import { Proposition } from './Proposition';
 import { PropositionalLogicLexer } from './antlr/PropositionalLogicLexer';
 import { PropositionalLogicParser } from './antlr/PropositionalLogicParser';
 
@@ -142,9 +142,8 @@ export default class AutoSuggester {
     core.ignoredTokens = new Set([PropositionalLogicParser.WS]);
     core.preferredRules = new Set([PropositionalLogicParser.RULE_proposition]);
 
-    const candidates = core.collectCandidates(
-      index ?? lexer.emitEOF().tokenIndex
-    );
+    const caretTokenIndex = index ?? lexer.emitEOF().tokenIndex;
+    const candidates = core.collectCandidates(caretTokenIndex);
 
     const suggestions: Suggestion[] = [
       ...this.getTokenBasedSuggestions(candidates, parser),
@@ -224,6 +223,8 @@ function computeTokenIndexOfTerminalNode(
   }
 }
 
+const MISSING_TOKEN_INDEX = -1;
+
 function computeTokenIndexOfChildNode(
   parseTree: ParseTree,
   caretPosition: CaretPosition
@@ -231,7 +232,7 @@ function computeTokenIndexOfChildNode(
   for (let i = 0; i < parseTree.getChildCount(); i++) {
     const child = parseTree.getChild(i)!;
     const index = computeTokenIndex(child, caretPosition);
-    if (index !== undefined) {
+    if (index !== undefined && index !== MISSING_TOKEN_INDEX) {
       return index;
     }
   }

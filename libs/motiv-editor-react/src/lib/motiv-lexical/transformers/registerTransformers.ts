@@ -1,9 +1,8 @@
-﻿import { LexicalEditor, TextNode } from 'lexical';
+﻿import { LexicalEditor } from 'lexical';
 import { mergeRegister } from '@lexical/utils';
 import { registerUnrecognizedNode } from './registerUnrecognizedNode';
 import { registerTokenNodeTransformer } from './registerTokenNodeTransformer';
-import { Proposition } from '../../Proposition';
-import { OperatorTypes } from '../../TokenType';
+import { Proposition, OperatorTypes } from '../parser';
 import { registerWhitespaceNodeTransformer } from './registerWhitespaceNodeTransformer';
 
 export function registerTransformers(

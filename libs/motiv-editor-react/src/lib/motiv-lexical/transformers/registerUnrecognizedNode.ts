@@ -4,13 +4,9 @@
   LexicalEditor,
   LexicalNode,
 } from 'lexical';
-import {
-  $isUnrecognizedNode,
-  UnrecognizedNode,
-} from '../nodes/UnrecognizedNode';
+import { $isUnrecognizedNode, UnrecognizedNode } from '../nodes';
 import { createTokenResolver } from './getTokenType';
-import { Proposition } from '../../Proposition';
-import { OperatorTypes } from '../../TokenType';
+import { Proposition, OperatorTypes } from '../parser';
 import { escapeRegExp } from '../../escapeRegExp';
 import { getSelectionStartEnd } from './getSelectionStartEnd';
 

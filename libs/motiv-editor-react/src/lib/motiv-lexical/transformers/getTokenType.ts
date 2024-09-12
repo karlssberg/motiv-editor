@@ -1,8 +1,10 @@
-﻿import { OperatorTypes, TokenType } from '../../TokenType';
-import { Proposition } from '../../Proposition';
-import { $createTokenNode } from '../nodes/TokenNode';
-import { $createWhitespaceNode } from '../nodes/WhitespaceNode';
-import { $createUnrecognizedNode } from '../nodes/UnrecognizedNode';
+﻿import { OperatorTypes, TokenType } from '../parser';
+import { Proposition } from '../parser';
+import {
+  $createTokenNode,
+  $createWhitespaceNode,
+  $createUnrecognizedNode,
+} from '../nodes';
 import { TextNode } from 'lexical';
 
 export const createTokenResolver = (

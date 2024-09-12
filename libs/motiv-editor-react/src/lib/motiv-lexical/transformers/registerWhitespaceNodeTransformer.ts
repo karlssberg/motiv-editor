@@ -1,8 +1,7 @@
 ﻿import { LexicalEditor } from 'lexical';
-import { $isWhitespaceNode, WhitespaceNode } from '../nodes/WhitespaceNode';
+import { $isWhitespaceNode, WhitespaceNode } from '../nodes';
 import { createTokenResolver } from './getTokenType';
-import { Proposition } from '../../Proposition';
-import { OperatorTypes } from '../../TokenType';
+import { Proposition, OperatorTypes } from '../parser';
 import { getSelectionStartEnd } from './getSelectionStartEnd';
 
 export function registerWhitespaceNodeTransformer(

@@ -16,15 +16,13 @@ import {
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
 import { MotivPlugin } from './MotivPlugin';
 import '@preact/signals-react/auto';
-import { MotivSyntaxHighlightPlugin } from './MotivSyntaxHighlightPlugin';
-import { TokenNode } from './motiv-lexical/nodes/TokenNode';
-import { WhitespaceNode } from './motiv-lexical/nodes/WhitespaceNode';
 import {
+  TokenNode,
+  WhitespaceNode,
   $createUnrecognizedNode,
   UnrecognizedNode,
-} from './motiv-lexical/nodes/UnrecognizedNode';
-import { MotivSyntaxErrorHighlighterPlugin } from './MotivSyntaxErrorHighlighterPlugin';
-import { Proposition } from './Proposition';
+  Proposition,
+} from './motiv-lexical';
 
 export interface ParameterInfo {
   type: `${PrimitiveTypeNames}`;
@@ -101,8 +99,6 @@ export function MotivEditor({
           defaultPositionRef={defaultPositionRef}
           onChange={onChange}
         />
-        <MotivSyntaxHighlightPlugin propositions={propositions} />
-        <MotivSyntaxErrorHighlighterPlugin propositions={propositions} />
       </div>
     </LexicalComposer>
   );

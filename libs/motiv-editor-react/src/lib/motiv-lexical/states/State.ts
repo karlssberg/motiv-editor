@@ -1,4 +1,4 @@
-﻿import { Suggestion } from '../../Suggestion';
+﻿import { Suggestion } from '../parser';
 
 export interface State {
   readonly type: string;
