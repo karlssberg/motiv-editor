@@ -5,6 +5,7 @@ import { registerErrorDecorator } from './errors';
 import { registerTransformers } from './transformers';
 import { LexicalEditor } from 'lexical';
 import { mergeRegister } from '@lexical/utils';
+import { registerSuggestionUpdater } from './parser/registerSuggestionUpdater';
 
 export function registerMotivEditor(
   editor: LexicalEditor,
@@ -20,6 +21,7 @@ export function registerMotivEditor(
   return mergeRegister(
     registerMotivCommands(editor, state),
     registerErrorDecorator(editor, propositions),
-    registerTransformers(editor, propositionLookup, operators)
+    registerTransformers(editor, propositionLookup, operators),
+    registerSuggestionUpdater(editor, state, propositions)
   );
 }

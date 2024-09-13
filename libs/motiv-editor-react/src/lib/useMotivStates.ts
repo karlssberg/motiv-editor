@@ -23,48 +23,17 @@ export interface StateContext {
 
 const nullSuggestions: Suggestion[] = [];
 
-function getSourceCodeCaretPosition(): number | null {
-  const selection = $getSelection();
-  if (!$isRangeSelection(selection)) {
-    return null; // Return null for non-range selections
-  }
-
-  const anchor = selection.anchor;
-  const anchorNode = anchor.getNode();
-  const anchorOffset = anchor.offset;
-
-  let globalOffset = 0;
-  const root = $getRoot();
-
-  // Traverse the editor content
-  root.getAllTextNodes().some((node) => {
-    if (node === anchorNode) {
-      globalOffset += anchorOffset;
-      return true; // Stop the traversal
-    }
-    globalOffset += node.getTextContent().length;
-    return false; // Continue the traversal
-  });
-
-  return globalOffset;
-}
-
 export function useMotivStates(propositionSuggestions: Proposition[]) {
   const [editor] = useLexicalComposerContext();
   const [selectedSuggestion, setSelectedSuggestion] =
     useState<Suggestion | null>(null);
-  const autoSuggester = useMemo(
-    () => new AutoSuggester(propositionSuggestions),
-    [propositionSuggestions]
-  );
-  const [suggestions, setSuggestions] = useState<Suggestion[]>(nullSuggestions);
   const initialFreeTextState = useMemo(
     () =>
       new FreeTextState(editor, setNextState, {
         setSelectedSuggestion: (suggestion) =>
           setSelectedSuggestion(suggestion),
       }),
-    [editor, suggestions]
+    [editor]
   );
 
   const [state, setState] = useState<State>(initialFreeTextState);
@@ -73,54 +42,13 @@ export function useMotivStates(propositionSuggestions: Proposition[]) {
     setState(nextState);
   }
 
-  useEffect(() => {
-    state.setSuggestions(suggestions);
-  }, [state, suggestions]);
-
-  const updateSuggestions = useCallback(() => {
-    const editorText = editor.getRootElement()?.textContent;
-
-    editor.getEditorState().read(() => {
-      const globalOffset = getSourceCodeCaretPosition();
-      if (globalOffset === null) {
-        console.log(
-          'Global offset is null, unable to update Motiv editor suggestions dropdown'
-        );
-        return;
-      }
-
-      const searchCriteria =
-        state instanceof SuggestionsState ? state.getSearchText() : '';
-
-      const newSuggestions = autoSuggester.getSuggestions(
-        editorText ?? '',
-        globalOffset,
-        searchCriteria
-      );
-      setSuggestions(newSuggestions);
-    });
-  }, [editor, autoSuggester, suggestions]);
-
-  useEffect(
-    () =>
-      mergeRegister(
-        editor.registerCommand(
-          SELECTION_CHANGE_COMMAND,
-          () => {
-            updateSuggestions();
-            return false;
-          },
-          COMMAND_PRIORITY_NORMAL
-        )
-      ),
-    [editor, updateSuggestions]
-  );
+  // useEffect(() => {
+  //   state.setSuggestions(suggestions);
+  // }, [state, suggestions]);
 
   return {
     state,
     selectedSuggestion,
     setSelectedSuggestion,
-    suggestions,
-    setSuggestions,
   };
 }

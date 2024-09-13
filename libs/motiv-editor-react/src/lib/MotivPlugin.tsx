@@ -21,6 +21,7 @@ import {
 } from '@floating-ui/react';
 import { escapeRegExp } from './escapeRegExp';
 import { registerMotivEditor } from './motiv-lexical/registerMotivEditor';
+import { UPDATE_SUGGESTIONS_COMMAND } from './motiv-lexical/parser/registerSuggestionUpdater';
 interface MotivPluginProps {
   propositions: Proposition[];
   containerRef: RefObject<HTMLElement>;
@@ -49,8 +50,8 @@ export function MotivPlugin({
   >();
   const dropdownRef = useRef(null);
   const [isBrowser, setIsBrowser] = useState(false);
-  const { state, selectedSuggestion, suggestions } =
-    useMotivStates(propositions);
+  const { state, selectedSuggestion } = useMotivStates(propositions);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
   useEffect(() => {
     return mergeRegister(
@@ -64,9 +65,21 @@ export function MotivPlugin({
             updateDropdownPosition();
           }
         })
+      ),
+      editor.registerCommand(
+        UPDATE_SUGGESTIONS_COMMAND,
+        (newSuggestions) => {
+          setSuggestions(newSuggestions);
+          return false;
+        },
+        0
       )
     );
   }, [editor, propositions, state]);
+
+  useEffect(() => {
+    state.setSuggestions(suggestions);
+  }, [state, suggestions]);
 
   useEffect(() => {
     if (state.suggestionVisible) {
