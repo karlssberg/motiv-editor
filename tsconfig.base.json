@@ -16,6 +16,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "logical-motiv": ["libs/logical-motiv/src/index.ts"],
       "motiv-editor-react": ["libs/motiv-editor-react/src/index.ts"]
     }
   },

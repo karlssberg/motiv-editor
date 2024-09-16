@@ -1,7 +1,8 @@
 ﻿'use client';
+'use strict';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { MotivEditor, ParameterInfo } from 'motiv-editor-react';
+import { MotivEditor } from 'motiv-editor-react';
 import {
   Client,
   MotivTypeResource,
@@ -9,6 +10,8 @@ import {
   PutRuleResource,
 } from './MotivClient';
 import { Proposition } from 'motiv-editor-react';
+import { VanillaMotivEditor } from '../../../../libs/motiv-editor-react/src/lib/VanillaMotivEditor';
+import { ParameterInfo } from 'logical-motiv';
 
 const motivClient = new Client('https://localhost:7203');
 
@@ -73,21 +76,23 @@ function ClientMotivEditor() {
   }
 
   return (
-    <>
-      <MotivEditor
-        propositions={propositions}
-        source={initialRule}
-        onChange={changeHandler}
-      />
-      <div className="pl-1">
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md"
-          onClick={saveHandler}
-        >
-          Save
-        </button>
+    <div className="flex-col gap-3">
+      <div className="flex items-baseline">
+        <VanillaMotivEditor
+          propositions={propositions}
+          source={initialRule}
+          onChange={changeHandler}
+        />
+        <div className="pl-1">
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md"
+            onClick={saveHandler}
+          >
+            Save
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 

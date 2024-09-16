@@ -14,7 +14,6 @@ import {
   TextNode,
 } from 'lexical';
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
-import { MotivPlugin } from './MotivPlugin';
 import '@preact/signals-react/auto';
 import {
   TokenNode,
@@ -22,18 +21,7 @@ import {
   $createUnrecognizedNode,
   UnrecognizedNode,
   Proposition,
-} from './motiv-lexical';
-
-export interface ParameterInfo {
-  type: `${PrimitiveTypeNames}`;
-}
-export enum PrimitiveTypeNames {
-  Unknown = 'unknown',
-  Decimal = 'decimal',
-  String = 'string',
-  DateTime = 'dateTime',
-  Integer = 'integer',
-}
+} from 'logical-motiv';
 
 interface MotivEditorProps {
   source: string;
@@ -93,12 +81,13 @@ export function MotivEditor({
           ErrorBoundary={LexicalErrorBoundary}
         />
         <HistoryPlugin />
-        <MotivPlugin
-          propositions={propositions}
-          containerRef={containerRef}
-          defaultPositionRef={defaultPositionRef}
-          onChange={onChange}
-        />
+        {/*<MotivPlugin*/}
+        {/*  propositions={propositions}*/}
+        {/*  containerRef={containerRef}*/}
+        {/*  defaultPositionRef={defaultPositionRef}*/}
+        {/*  onChange={onChange}*/}
+        {/*  source={source}*/}
+        {/*/>*/}
       </div>
     </LexicalComposer>
   );
